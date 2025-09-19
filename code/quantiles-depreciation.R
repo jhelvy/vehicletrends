@@ -8,7 +8,7 @@ ds <- ds %>%
   filter(!is.na(price), !is.na(msrp)) %>%
   mutate(
     age_months = round(age_years * 12),
-    rr = msrp / price
+    rr = price / msrp
   )
 
 # Compute quantiles of RR
