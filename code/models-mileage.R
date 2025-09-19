@@ -3,15 +3,16 @@ source(here::here("code", "0-setup.R"))
 
 ds <- load_ds() |>
   filter(age_years >= 2 & age_years <= 9) |>
-  filter(inventory_type == 'used')
+  filter(inventory_type == 'used') %>%
+  select(vehicle_type, powertrain, miles, age_years)
 
 # Function to get age coefficient for vehicle type and powertrain
-get_age_coefficient <- function(vehicle_type, powertrain) {
+get_annual_mileage_coef <- function(vt, pt) {
   model <- feols(
     fml = miles ~ age_years,
     data = ds |>
-      filter(vehicle_type == !!vehicle_type) |>
-      filter(powertrain == !!powertrain) |>
+      filter(vehicle_type == {{ vt }}) |>
+      filter(powertrain == {{ pt }}) |>
       select(miles, age_years) |>
       collect()
   )
@@ -25,11 +26,11 @@ combinations <- ds |>
   collect()
 
 # Apply function to all combinations
-age_coefficients <- combinations |>
+mileage_coefficients <- combinations |>
   mutate(
-    annual_mileage = map2_dbl(vehicle_type, powertrain, get_age_coefficient)
+    annual_mileage = map2_dbl(vehicle_type, powertrain, get_annual_mileage_coef)
   )
 
-age_coefficients
+mileage_coefficients
 
-write_csv(age_coefficients, here('data', 'annual_mileage.csv'))
+write_csv(mileage_coefficients, here('data', 'annual_mileage.csv'))
