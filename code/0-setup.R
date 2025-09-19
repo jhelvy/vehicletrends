@@ -7,11 +7,71 @@ library(lubridate)
 library(janitor)
 library(cowplot)
 library(logitr)
+library(fixest)
+
+path_raw_data <- '/Volumes/SSK SSD/marketcheck/db/clean/db'
 
 options(arrow.unsafe_metadata = TRUE)
 options(dplyr.width = Inf)
 
 set.seed(123)
+
+us_states <- c(
+  "AK",
+  "AL",
+  "AR",
+  "AZ",
+  "CA",
+  "CO",
+  "CT",
+  "DE",
+  "FL",
+  "GA",
+  "HI",
+  "IA",
+  "ID",
+  "IL",
+  "IN",
+  "KS",
+  "KY",
+  "LA",
+  "MA",
+  "MD",
+  "ME",
+  "MI",
+  "MN",
+  "MO",
+  "MS",
+  "MT",
+  "NC",
+  "ND",
+  "NH",
+  "NJ",
+  "NM",
+  "NV",
+  "NY",
+  "OH",
+  "OK",
+  "OR",
+  "PA",
+  "RI",
+  "SC",
+  "SD",
+  "TN",
+  "TX",
+  "UT",
+  "VA",
+  "VT",
+  "WA",
+  "WI",
+  "WV",
+  "WY",
+  "NE"
+)
+
+# functions ----
+
+`%notin%` = negate(`%in%`)
 
 raw_data_filters <- function(ds) {
   ds %>%
@@ -51,6 +111,10 @@ raw_data_filters <- function(ds) {
         )
       ),
     ) %>%
+    # Merge together flex and cv powertrains
+    mutate(
+      powertrain = ifelse(powertrain == 'flex', 'cv', powertrain)
+    ) %>%
     # filter(vehicle_type %in% c('car', 'suv')) %>%
     # filter(powertrain %in% c('cv', 'hev', 'phev', 'bev')) %>%
     # Remove odd cases that are likely the result of coding errors in the
@@ -69,7 +133,7 @@ raw_data_filters <- function(ds) {
 }
 
 load_ds <- function() {
-  ds <- open_dataset(here::here('data', 'listings.parquet')) %>%
+  ds <- open_dataset(here::here('data_local', 'listings.parquet')) %>%
     filter(listing_year < 2025) %>%
     filter(!is.na(powertrain)) %>%
     filter(!is.na(vehicle_type))
