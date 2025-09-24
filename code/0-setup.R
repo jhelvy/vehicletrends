@@ -8,6 +8,10 @@ library(janitor)
 library(cowplot)
 library(logitr)
 library(fixest)
+library(osrm)
+library(parallel)
+library(ggtext)
+library(ggrepel)
 
 path_raw_data <- '/Volumes/SSK SSD/marketcheck/db/clean/db'
 
