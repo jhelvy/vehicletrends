@@ -12,6 +12,8 @@ library(osrm)
 library(parallel)
 library(ggtext)
 library(ggrepel)
+library(dplyr)
+library(ggplot2)
 
 path_raw_data <- '/Volumes/SSK SSD/marketcheck/db/clean/db'
 
@@ -257,3 +259,26 @@ get_quantiles_detailed <- function(df, var) {
     mutate(quantile = as.numeric(quantile))
   return(result)
 }
+
+clean_factors_powertrain <- function(ds) {
+    ds %>%
+        mutate(
+            powertrain = factor(
+                powertrain,
+                levels = c("cv", "flex", "hev", "phev", "bev"),
+                labels = c("Conventional", "Flex-fuel", "Hybrid", "PHEV", "BEV")
+            )
+        )
+}
+
+clean_factors_vehicle_type <- function(ds) {
+    ds %>%
+        mutate(
+            vehicle_type = factor(
+                vehicle_type,
+                levels = c("car", "cuv", "suv", "pickup", "minivan"),
+                labels = c("Car", "CUV", "SUV", "Pickup", "Minivan")
+            )
+        )
+}
+

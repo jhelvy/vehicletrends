@@ -1,10 +1,7 @@
 # Load functions, libraries, and other settings
 source(here::here("code", "0-setup.R"))
 
-nrel_dt <- open_dataset(here::here("data", "nrel_data_budget.parquet")) %>%
-  filter(!is.na(budget), !is.na(pop_over_25), !is.na(income)) %>%
-  collect()
-tract_dt <- read_parquet(here('data', 'tract_dt.parquet')) %>%
+tract_dt <- read_parquet(here('data_local', 'tract_dt.parquet')) %>%
   rename(income = med_inc_hh) %>%
   mutate(
     income = parse_number(income),
@@ -15,27 +12,26 @@ tract_dt <- read_parquet(here('data', 'tract_dt.parquet')) %>%
       TRUE ~ '> $120k'
     )
   )
-pop <- nrel_dt %>%
-  distinct(GEOID, pop_over_25) %>%
-  group_by(GEOID) %>%
-  summarise(pop_over_25 = mean(pop_over_25))
-
+ 
 # Total counts only
 
 counts_total_18 <- open_dataset(here(
-  'data',
+  'data_local',
+  'counts',
   'counts-2018',
   'counts_30.parquet'
-)) %>%
-  # Add population
-  left_join(pop, by = "GEOID")
+))
+
 counts_total_24 <- open_dataset(here(
-  'data',
+  'data_local',
+  'counts',
   'counts-2024',
   'counts_30.parquet'
-)) %>%
-  # Add population
-  left_join(pop, by = "GEOID")
+)) 
+
+font <- "Arial"
+col_red <- "#FF0000"
+col_blue <- "#0000FF"
 
 get_hhi <- function(counts, var) {
   result <- counts %>%
@@ -148,12 +144,7 @@ hhi_type %>%
     subtitle = 'Higher number indicates greater concentration by brand'
   )
 
-ggsave(
-  here("figs", "hhi_vehicle_type_powertrain.png"),
-  width = 7,
-  height = 5,
-  dpi = 300
-)
+
 
 # HHI price_bin ----
 
@@ -198,12 +189,6 @@ hhi_price %>%
     subtitle = 'Higher number indicates greater concentration by brand'
   )
 
-ggsave(
-  here("figs", "hhi_price_bin_powertrain.png"),
-  width = 7,
-  height = 5,
-  dpi = 300
-)
 
 bind_rows(
   hhi_price %>%
@@ -268,10 +253,3 @@ bind_rows(
     plot.background = element_rect(fill = 'white', color = NA)
   ) +
   panel_border()
-
-ggsave(
-  here("figs", "hhi_powertrain_dumbbell.png"),
-  width = 12,
-  height = 5,
-  dpi = 300
-)
