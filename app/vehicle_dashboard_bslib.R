@@ -151,7 +151,7 @@ ui <- page_navbar(
         "Daily Vehicle Miles Traveled Distribution",
         class = "text-center"
       ),
-      plotOutput("cdf_plot", height = "650px")
+      plotlyOutput("cdf_plot", height = "650px")
     )
   ),
   
@@ -168,7 +168,7 @@ ui <- page_navbar(
           "Vehicle Mileage Trends by Age",
           class = "text-center"
         ),
-        plotOutput("mileage_plot", height = "700px")
+        plotlyOutput("mileage_plot", height = "700px")
       )
     ),
     layout_columns(
@@ -195,7 +195,7 @@ ui <- page_navbar(
         span("Three-panel comparison showing Hybrid, Plug-in Hybrid, and Battery Electric vs Conventional",
              style = "font-size: 14px; font-weight: normal; color: #666;")
       ),
-      plotOutput("retention_plot", height = "600px")
+      plotlyOutput("retention_plot", height = "600px")
     ),
 
     br(),
@@ -266,7 +266,7 @@ ui <- page_navbar(
             "Your Custom Vehicle Retention Comparison",
             style = "background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white;"
           ),
-          plotOutput("custom_retention_plot", height = "600px")
+          plotlyOutput("custom_retention_plot", height = "600px")
         )
       )
     )
@@ -545,23 +545,26 @@ server <- function(input, output, session) {
              vehicle_type %in% vehicle_types)
   })
   
-  # Main Plot (CDF/PDF/Histogram) - Fixed Version
-# Daily VMT Plot Fix - Replace the cdf_plot output
+  # Main Plot (CDF/PDF/Histogram) - Pure Plotly with Subplots
+# Daily VMT Plot - Fully Interactive
 
-output$cdf_plot <- renderPlot({
+output$cdf_plot <- renderPlotly({
   tryCatch({
     data <- filtered_data()
 
     if(nrow(data) == 0) {
-      return(ggplot() +
-             labs(title = "No data available for selected filters",
-                  subtitle = "Try adjusting the Global Filters in the sidebar") +
-             theme_minimal())
+      return(plot_ly() %>%
+               add_annotations(text = "No data available for selected filters",
+                             xref = "paper", yref = "paper",
+                             x = 0.5, y = 0.5, showarrow = FALSE))
     }
 
     # Ensure we have valid data columns
     if(!"dvmt" %in% colnames(data) || !"quantile" %in% colnames(data)) {
-      return(ggplot() + labs(title = "Missing required columns in data"))
+      return(plot_ly() %>%
+               add_annotations(text = "Missing required columns in data",
+                             xref = "paper", yref = "paper",
+                             x = 0.5, y = 0.5, showarrow = FALSE))
     }
 
     # Remove any NA values
@@ -569,100 +572,107 @@ output$cdf_plot <- renderPlot({
       filter(!is.na(dvmt), !is.na(quantile), !is.na(powertrain), !is.na(vehicle_type))
 
     if(nrow(data) == 0) {
-      return(ggplot() + labs(title = "No valid data after cleaning"))
+      return(plot_ly() %>%
+               add_annotations(text = "No valid data after cleaning",
+                             xref = "paper", yref = "paper",
+                             x = 0.5, y = 0.5, showarrow = FALSE))
     }
 
     # Get plot type from input (default to CDF)
     plot_type <- if(is.null(input$plot_type)) "cdf" else input$plot_type
 
-    # Create the classic CDF visualization like the reference image
+    # Get unique powertrains for faceting
+    powertrains <- unique(data$powertrain)
+    vehicle_types <- unique(data$vehicle_type)
+
+    # Create color palette
+    colors <- viridisLite::viridis(length(vehicle_types))
+    color_map <- setNames(colors, vehicle_types)
+
     if(plot_type == "cdf") {
-      p <- ggplot(data, aes(x = dvmt, y = quantile, color = vehicle_type)) +
-        geom_line(linewidth = 1.2, alpha = 0.8) +
-        facet_wrap(~powertrain, scales = "free") +
-        labs(
-          title = "Cumulative Distribution Function (CDF) of Daily VMT",
-          subtitle = "Distribution of daily vehicle miles traveled by powertrain and vehicle type",
-          x = "Daily Vehicle Miles Traveled (DVMT)",
-          y = "Cumulative Probability (%)",
-          color = "Vehicle Type"
-        ) +
-        theme_minimal() +
-        theme(
-          legend.position = "bottom",
-          plot.title = element_text(size = 14, face = "bold"),
-          plot.subtitle = element_text(size = 11, color = "gray40"),
-          strip.text = element_text(size = 11, face = "bold"),
-          legend.title = element_text(face = "bold")
-        ) +
-        scale_color_viridis_d() +
-        guides(color = guide_legend(override.aes = list(linewidth = 2)))
+      # Create subplots for each powertrain
+      plots <- lapply(powertrains, function(pt) {
+        pt_data <- data %>% filter(powertrain == pt)
 
-    } else if(plot_type == "pdf") {
-      # PDF plot (derivative of CDF)
-      pdf_data <- data %>%
-        arrange(powertrain, vehicle_type, quantile) %>%
-        group_by(powertrain, vehicle_type) %>%
-        mutate(
-          pdf_value = c(diff(quantile), 0) / pmax(c(diff(dvmt), 1), 0.001)
+        p <- plot_ly()
+
+        for(vt in vehicle_types) {
+          vt_data <- pt_data %>% filter(vehicle_type == vt)
+          if(nrow(vt_data) > 0) {
+            p <- p %>%
+              add_trace(
+                data = vt_data,
+                x = ~dvmt,
+                y = ~quantile,
+                type = 'scatter',
+                mode = 'lines',
+                name = vt,
+                line = list(color = color_map[vt], width = 2),
+                hovertemplate = paste0(
+                  "<b>", vt, "</b><br>",
+                  "DVMT: %{x:.1f} miles<br>",
+                  "Quantile: %{y:.1%}<br>",
+                  "<extra></extra>"
+                ),
+                showlegend = (pt == powertrains[1])
+              )
+          }
+        }
+
+        p <- p %>%
+          layout(
+            xaxis = list(title = "DVMT"),
+            yaxis = list(title = "Cumulative Probability"),
+            annotations = list(
+              x = 0.5, y = 1.05,
+              text = paste("<b>", toupper(pt), "</b>"),
+              xref = "paper", yref = "paper",
+              showarrow = FALSE,
+              font = list(size = 12)
+            )
+          )
+
+        return(p)
+      })
+
+      # Combine into subplot
+      fig <- subplot(plots, nrows = ceiling(length(powertrains)/2),
+                    shareX = FALSE, shareY = TRUE, titleX = TRUE, titleY = TRUE) %>%
+        layout(
+          title = list(
+            text = "<b>Cumulative Distribution Function (CDF) of Daily VMT</b><br><sub>Distribution of daily vehicle miles traveled by powertrain and vehicle type</sub>",
+            font = list(size = 16)
+          ),
+          hovermode = 'closest',
+          showlegend = TRUE,
+          legend = list(
+            orientation = "h",
+            x = 0.5,
+            xanchor = "center",
+            y = -0.15
+          )
         ) %>%
-        filter(pdf_value > 0, pdf_value < Inf, !is.na(pdf_value)) %>%
-        ungroup()
+        config(
+          displayModeBar = TRUE,
+          modeBarButtonsToRemove = c('lasso2d', 'select2d'),
+          toImageButtonOptions = list(format = 'png', filename = 'dvmt_cdf_plot')
+        )
 
-      if(nrow(pdf_data) == 0) {
-        return(ggplot() + labs(title = "No data available for PDF calculation"))
-      }
-
-      p <- ggplot(pdf_data, aes(x = dvmt, y = pdf_value, color = vehicle_type)) +
-        geom_line(linewidth = 1.2, alpha = 0.8) +
-        facet_wrap(~powertrain, scales = "free") +
-        labs(
-          title = "Probability Density Function (PDF) of Daily VMT",
-          subtitle = "Density distribution showing usage patterns",
-          x = "Daily Vehicle Miles Traveled (DVMT)",
-          y = "Probability Density",
-          color = "Vehicle Type"
-        ) +
-        theme_minimal() +
-        theme(
-          legend.position = "bottom",
-          plot.title = element_text(size = 14, face = "bold"),
-          plot.subtitle = element_text(size = 11, color = "gray40"),
-          strip.text = element_text(size = 11, face = "bold"),
-          legend.title = element_text(face = "bold")
-        ) +
-        scale_color_viridis_d()
+      return(fig)
 
     } else {
-      # Histogram
-      p <- ggplot(data, aes(x = dvmt, fill = vehicle_type)) +
-        geom_histogram(alpha = 0.7, bins = 30, position = "identity") +
-        facet_wrap(~powertrain, scales = "free") +
-        labs(
-          title = "Histogram of Daily VMT",
-          subtitle = "Distribution of daily vehicle miles traveled",
-          x = "Daily Vehicle Miles Traveled (DVMT)",
-          y = "Frequency",
-          fill = "Vehicle Type"
-        ) +
-        theme_minimal() +
-        theme(
-          legend.position = "bottom",
-          plot.title = element_text(size = 14, face = "bold"),
-          plot.subtitle = element_text(size = 11, color = "gray40"),
-          strip.text = element_text(size = 11, face = "bold"),
-          legend.title = element_text(face = "bold")
-        ) +
-        scale_fill_viridis_d(alpha = 0.8)
+      # For PDF and Histogram, return a simple message for now
+      return(plot_ly() %>%
+               add_annotations(text = "PDF and Histogram modes coming soon - using CDF for now",
+                             xref = "paper", yref = "paper",
+                             x = 0.5, y = 0.5, showarrow = FALSE))
     }
 
-    return(p)
-
   }, error = function(e) {
-    return(ggplot() +
-           labs(title = "Error creating plot",
-                subtitle = paste("Error:", e$message)) +
-           theme_minimal())
+    return(plot_ly() %>%
+             add_annotations(text = paste("Error:", e$message),
+                           xref = "paper", yref = "paper",
+                           x = 0.5, y = 0.5, showarrow = FALSE))
   })
 })
 
@@ -688,118 +698,245 @@ output$cdf_plot <- renderPlot({
     ggplotly(p)
   })
   
-  # Cumulative VMT by Age - Research Style Visualization with ggplot2
-  output$mileage_plot <- renderPlot({
+  # Cumulative VMT by Age - Grid layout (rows=vehicle types, cols=powertrains)
+  output$mileage_plot <- renderPlotly({
     tryCatch({
-      # Get mileage data
-      data <- mileage_data()
+      # Load and process mileage data
+      data <- mileage_data() %>%
+        mutate(age_years = age_months / 12) %>%
+        filter(age_years > 2)
 
       if(nrow(data) == 0) {
-        p <- ggplot() +
-          labs(title = "No mileage data available") +
-          theme_minimal()
-        return(p)
+        return(plot_ly() %>%
+                 add_annotations(text = "No mileage data available",
+                               xref = "paper", yref = "paper",
+                               x = 0.5, y = 0.5, showarrow = FALSE))
       }
 
-      # Get age range from input, defaulting to 2-8 years
-      age_min <- if(!is.null(input$age_range)) input$age_range[1] else 2
+      # Get age range from input
+      age_min <- if(!is.null(input$age_range)) max(2, input$age_range[1]) else 2
       age_max <- if(!is.null(input$age_range)) input$age_range[2] else 8
 
-      # Process data for spaghetti plot visualization
+      # Apply filters
       plot_data <- data %>%
-        mutate(age_years = age_months / 12) %>%
         filter(
           age_years >= age_min,
           age_years <= age_max,
           !is.na(miles50), !is.na(miles25), !is.na(miles75)
-        ) %>%
-        # Apply user filters if available
-        filter(
-          if(!is.null(input$fuel_types) && length(input$fuel_types) > 0)
-            powertrain %in% input$fuel_types else TRUE,
-          if(!is.null(input$vehicle_types) && length(input$vehicle_types) > 0)
-            vehicle_type %in% input$vehicle_types else TRUE
         )
 
-      if(nrow(plot_data) == 0) {
-        p <- ggplot() +
-          labs(title = "No data matches current filters") +
-          theme_minimal()
-        return(p)
+      # Apply user filters
+      if(!is.null(input$fuel_types) && length(input$fuel_types) > 0) {
+        plot_data <- plot_data %>% filter(powertrain %in% input$fuel_types)
+      }
+      if(!is.null(input$vehicle_types) && length(input$vehicle_types) > 0) {
+        plot_data <- plot_data %>% filter(vehicle_type %in% input$vehicle_types)
       }
 
-      # Apply light smoothing to make lines appear smoother
-      plot_data_smooth <- plot_data %>%
-        # Round to 0.05 year intervals for light smoothing
-        mutate(age_rounded = round(age_years * 20) / 20) %>%
-        group_by(powertrain, vehicle_type, age_rounded) %>%
+      if(nrow(plot_data) == 0) {
+        return(plot_ly() %>%
+                 add_annotations(text = "No data matches current filters",
+                               xref = "paper", yref = "paper",
+                               x = 0.5, y = 0.5, showarrow = FALSE))
+      }
+
+      # Aggregate by powertrain AND vehicle type (don't combine them)
+      plot_data_agg <- plot_data %>%
+        group_by(powertrain, vehicle_type, age_years) %>%
         summarise(
           miles25 = mean(miles25, na.rm = TRUE),
           miles50 = mean(miles50, na.rm = TRUE),
           miles75 = mean(miles75, na.rm = TRUE),
           .groups = "drop"
-        ) %>%
-        rename(age_years = age_rounded)
-
-      # Create interactive plotly visualization
-      p <- ggplot(plot_data_smooth, aes(x = age_years))
-
-      # Add smooth gray confidence bands if enabled
-      if(!is.null(input$show_confidence_bands) && input$show_confidence_bands) {
-        p <- p +
-          geom_ribbon(aes(ymin = miles25, ymax = miles75, group = vehicle_type),
-                     fill = "gray80", alpha = 0.3)
-      }
-
-      # Add clean black median trend lines
-      p <- p +
-        geom_line(aes(y = miles50, group = vehicle_type),
-                 color = "black", linewidth = 1.2) +
-        # Use facet_grid with vehicle_type as rows and powertrain as columns
-        facet_grid(rows = vars(vehicle_type), cols = vars(powertrain),
-                   scales = "fixed") +
-        # Formatting and labels
-        scale_x_continuous(
-          name = "Vehicle Age (Years)",
-          limits = c(age_min, age_max),
-          breaks = scales::pretty_breaks(n = 4)
-        ) +
-        scale_y_continuous(
-          name = "Cumulative Mileage (Miles)",
-          labels = scales::comma_format()
-        ) +
-        labs(
-          title = "Vehicle Mileage Trends by Age",
-          subtitle = "Interactive plot with median trends and confidence bands"
-        ) +
-        # Clean minimal theme
-        theme_minimal() +
-        theme(
-          plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
-          plot.subtitle = element_text(size = 12, hjust = 0.5, color = "gray40"),
-          strip.text = element_text(size = 10, face = "bold"),
-          panel.grid.minor = element_blank(),
-          panel.grid.major = element_line(color = "gray95", linewidth = 0.2),
-          panel.border = element_rect(color = "gray80", fill = NA, linewidth = 0.3),
-          axis.title = element_text(face = "bold", size = 11),
-          panel.spacing = unit(0.3, "cm"),
-          axis.text = element_text(size = 9),
-          legend.position = "none"  # Remove legends as specified
         )
 
-      # Return static ggplot to avoid subscript errors
-      # Note: Plotly causes subscript out of bounds errors with faceted plots
+      # Get unique powertrains and vehicle types
+      powertrains <- sort(unique(plot_data_agg$powertrain))
+      vehicle_types <- sort(unique(plot_data_agg$vehicle_type))
+      show_bands <- if(!is.null(input$show_confidence_bands)) input$show_confidence_bands else TRUE
 
-      return(p)
+      # Create single figure with manual domain positioning
+      fig <- plot_ly()
+
+      # Calculate grid dimensions
+      n_rows <- length(vehicle_types)
+      n_cols <- length(powertrains)
+
+      # Margins between subplots
+      h_gap <- 0.05
+      v_gap <- 0.05
+
+      # Calculate cell dimensions
+      cell_width <- (1 - (n_cols - 1) * h_gap) / n_cols
+      cell_height <- (1 - (n_rows - 1) * v_gap) / n_rows
+
+      # Build axis layout lists
+      xaxes <- list()
+      yaxes <- list()
+      annotations <- list()
+
+      trace_counter <- 0
+
+      for(i in seq_along(vehicle_types)) {
+        vt <- vehicle_types[i]
+
+        for(j in seq_along(powertrains)) {
+          pt <- powertrains[j]
+
+          # Get data for this cell
+          cell_data <- plot_data_agg %>%
+            filter(vehicle_type == vt, powertrain == pt)
+
+          # Calculate domain positions
+          x_start <- (j - 1) * (cell_width + h_gap)
+          x_end <- x_start + cell_width
+          y_start <- 1 - i * (cell_height + v_gap)
+          y_end <- y_start + cell_height
+
+          # Create unique axis names
+          xaxis_name <- if(i == 1 && j == 1) "x" else paste0("x", trace_counter + 1)
+          yaxis_name <- if(i == 1 && j == 1) "y" else paste0("y", trace_counter + 1)
+
+          if(nrow(cell_data) > 0) {
+            # Add ribbon trace
+            if(show_bands) {
+              fig <- fig %>%
+                add_trace(
+                  data = cell_data,
+                  x = ~age_years,
+                  y = ~miles25,
+                  type = "scatter",
+                  mode = "lines",
+                  line = list(color = "transparent"),
+                  showlegend = FALSE,
+                  xaxis = xaxis_name,
+                  yaxis = yaxis_name,
+                  hoverinfo = "none"
+                ) %>%
+                add_trace(
+                  data = cell_data,
+                  x = ~age_years,
+                  y = ~miles75,
+                  type = "scatter",
+                  mode = "lines",
+                  fill = "tonexty",
+                  fillcolor = "rgba(128, 128, 128, 0.25)",
+                  line = list(color = "transparent"),
+                  showlegend = FALSE,
+                  xaxis = xaxis_name,
+                  yaxis = yaxis_name,
+                  hoverinfo = "none"
+                )
+            }
+
+            # Add median line
+            fig <- fig %>%
+              add_trace(
+                data = cell_data,
+                x = ~age_years,
+                y = ~miles50,
+                type = "scatter",
+                mode = "lines",
+                line = list(color = "black", width = 2),
+                showlegend = FALSE,
+                xaxis = xaxis_name,
+                yaxis = yaxis_name,
+                hoverinfo = "none"
+              )
+          }
+
+          # Configure axis
+          xaxis_config <- list(
+            domain = c(x_start, x_end),
+            range = c(age_min, age_max),
+            showticklabels = TRUE,
+            title = if(i == n_rows) list(text = "", font = list(size = 9)) else ""
+          )
+
+          yaxis_config <- list(
+            domain = c(y_start, y_end),
+            anchor = xaxis_name,
+            showticklabels = TRUE,
+            title = if(j == 1) list(text = "", font = list(size = 9)) else ""
+          )
+
+          if(trace_counter == 0) {
+            xaxes[["xaxis"]] <- xaxis_config
+            yaxes[["yaxis"]] <- yaxis_config
+          } else {
+            xaxes[[paste0("xaxis", trace_counter + 1)]] <- xaxis_config
+            yaxes[[paste0("yaxis", trace_counter + 1)]] <- yaxis_config
+          }
+
+          trace_counter <- trace_counter + 1
+        }
+      }
+
+      # Add column headers (powertrains)
+      for(j in seq_along(powertrains)) {
+        x_pos <- (j - 1) * (cell_width + h_gap) + cell_width / 2
+        annotations[[length(annotations) + 1]] <- list(
+          x = x_pos,
+          y = 1.02,
+          text = paste0("<b>", toupper(powertrains[j]), "</b>"),
+          xref = "paper",
+          yref = "paper",
+          xanchor = "center",
+          yanchor = "bottom",
+          showarrow = FALSE,
+          font = list(size = 12)
+        )
+      }
+
+      # Add row labels (vehicle types)
+      for(i in seq_along(vehicle_types)) {
+        y_pos <- 1 - (i - 1) * (cell_height + v_gap) - cell_height / 2
+        annotations[[length(annotations) + 1]] <- list(
+          x = 1.01,
+          y = y_pos,
+          text = paste0("<b>", toupper(vehicle_types[i]), "</b>"),
+          xref = "paper",
+          yref = "paper",
+          xanchor = "left",
+          yanchor = "middle",
+          showarrow = FALSE,
+          font = list(size = 12),
+          textangle = -90
+        )
+      }
+
+      # Apply layout
+      layout_args <- c(
+        list(
+          title = list(text = "Vehicle Mileage Trends by Age", font = list(size = 16)),
+          annotations = annotations,
+          showlegend = FALSE,
+          hovermode = "closest",
+          margin = list(t = 60, b = 50, l = 60, r = 80)
+        ),
+        xaxes,
+        yaxes
+      )
+
+      fig <- do.call(layout, c(list(fig), layout_args))
+
+      fig <- fig %>%
+        config(
+          displayModeBar = TRUE,
+          modeBarButtonsToRemove = c("lasso2d", "select2d"),
+          toImageButtonOptions = list(format = "png", filename = "mileage_plot")
+        )
+
+      return(fig)
 
     }, error = function(e) {
-      p <- ggplot() +
-        labs(title = paste("Error creating plot:", e$message)) +
-        theme_minimal()
-      return(p)
+      return(plot_ly() %>%
+               add_annotations(text = paste("Error:", e$message),
+                             xref = "paper", yref = "paper",
+                             x = 0.5, y = 0.5, showarrow = FALSE))
     })
   })
-  
+
   # Cumulative VMT Summary Table (Research-focused)
   output$mileage_summary <- DT::renderDataTable({
     data <- filtered_mileage_data()
@@ -848,189 +985,285 @@ output$cdf_plot <- renderPlot({
       )
   })
   
-  # Vehicle Retention Rates by Age - 3-FIGS.R IMPLEMENTATION
-  output$retention_plot <- renderPlot({
+  # Vehicle Retention Rates by Age - 3-panel layout matching target design
+  output$retention_plot <- renderPlotly({
     tryCatch({
-      # Define colors exactly as in 3-figs.R
-      color_cv <- "grey42"
-      color_ev <- "#00BA38"
-      color_tesla <- "#619CFF"
+      # Load retention data
+      data_paths <- c(
+        "data/quantiles_rr.parquet",
+        "../data/quantiles_rr.parquet",
+        file.path(dirname(getwd()), "data", "quantiles_rr.parquet")
+      )
 
-      # Get the raw retention data
-      quantiles <- retention_data()
-
-      if(nrow(quantiles) == 0) {
-        p <- ggplot() +
-          labs(title = "No retention data available",
-               subtitle = "Please check data loading") +
-          theme_minimal()
-        return(p)
+      data_path_rr <- NULL
+      for (path in data_paths) {
+        if (file.exists(path)) {
+          data_path_rr <- path
+          break
+        }
       }
 
-      # Follow exact 3-figs.R data preparation
-      quantiles <- quantiles %>%
+      if (is.null(data_path_rr)) {
+        stop("Cannot find quantiles_rr.parquet file")
+      }
+
+      # Load main retention data
+      quantiles <- read_parquet(data_path_rr) %>%
         mutate(age_years = age_months / 12) %>%
         filter(between(age_years, 1, 8))
 
-      quantiles_car <- quantiles %>%
-        filter(vehicle_type == 'car')
-
-      quantiles_conventional <- quantiles_car %>%
-        filter(powertrain == 'conventional')
-
-      quantiles_other <- quantiles_car %>%
-        filter(powertrain %in% c('hybrid', 'phev')) %>%
-        arrange(powertrain) %>%
-        mutate(cv = FALSE, type = powertrain)
-
-      # Handle BEV data - check if we have BEV data in main dataset
-      quantiles_bev_data <- quantiles_car %>%
-        filter(powertrain == 'bev')
-
-      if(nrow(quantiles_bev_data) > 0) {
-        # Use actual BEV data if available
-        quantiles_bev <- quantiles_bev_data %>%
-          mutate(
-            cv = FALSE,
-            type = 'ev',  # Non-Tesla BEV for now
-            tesla = 0
-          ) %>%
-          select(names(quantiles_other), tesla)
-
-        quantiles_bev_tesla <- quantiles_bev %>%
-          slice(0)  # Empty for now since we don't have Tesla distinction
-
-        quantiles_bev_nontesla <- quantiles_bev %>%
-          select(-tesla)
-      } else {
-        # Create realistic sample data when no BEV data exists
-        sample_ages <- seq(1, 8, 0.5)
-        quantiles_bev_nontesla <- data.frame(
-          age_years = sample_ages,
-          rr25 = pmax(0.1, 0.62 - 0.08 * sample_ages),
-          rr50 = pmax(0.15, 0.65 - 0.08 * sample_ages),
-          rr75 = pmax(0.2, 0.68 - 0.08 * sample_ages),
-          powertrain = 'bev',
-          vehicle_type = 'car',
-          cv = FALSE,
-          type = 'ev'
-        )
-
-        quantiles_bev_tesla <- data.frame(
-          age_years = sample_ages,
-          rr25 = pmax(0.4, 0.88 - 0.06 * sample_ages),
-          rr50 = pmax(0.45, 0.91 - 0.06 * sample_ages),
-          rr75 = pmax(0.5, 0.94 - 0.06 * sample_ages),
-          powertrain = 'bev',
-          vehicle_type = 'car',
-          cv = FALSE,
-          type = 'tesla'
-        )
+      # Apply vehicle type filter
+      if(!is.null(input$vehicle_types) && length(input$vehicle_types) > 0) {
+        quantiles <- quantiles %>% filter(vehicle_type %in% input$vehicle_types)
       }
 
-      # Combine other powertrains with BEV data
-      quantiles_other <- rbind(quantiles_other, quantiles_bev_nontesla, quantiles_bev_tesla)
+      # Aggregate by powertrain and age
+      quantiles_agg <- quantiles %>%
+        group_by(powertrain, age_years) %>%
+        summarise(
+          rr25 = mean(rr25, na.rm = TRUE),
+          rr50 = mean(rr50, na.rm = TRUE),
+          rr75 = mean(rr75, na.rm = TRUE),
+          .groups = "drop"
+        ) %>%
+        filter(!is.na(rr25), !is.na(rr50), !is.na(rr75))
 
-      # Replicate conventional data for each powertrain comparison
-      rep_length <- nrow(quantiles_conventional)
-      if(rep_length > 0) {
-        quantiles_conventional <- quantiles_conventional[rep(1:rep_length, 3),]
-        quantiles_conventional$powertrain <- rep(
-          c('bev', 'hybrid', 'phev'), each = rep_length)
-        quantiles_conventional$cv <- TRUE
-        quantiles_conventional$type <- 'conventional'
+      if(nrow(quantiles_agg) == 0) {
+        return(plot_ly() %>%
+                 add_annotations(text = "No retention data available",
+                               xref = "paper", yref = "paper",
+                               x = 0.5, y = 0.5, showarrow = FALSE))
       }
 
-      # Combine all data
-      df_fig1 <- rbind(quantiles_other, quantiles_conventional) %>%
-        mutate(
-          powertrain_label = factor(case_when(
-            powertrain == 'hybrid' ~ 'Hybrid',
-            powertrain == 'phev' ~ 'Plug-in Hybrid',
-            powertrain == 'bev' ~ 'Battery Electric',
-            TRUE ~ powertrain
-          ), levels = c('Hybrid', 'Plug-in Hybrid', 'Battery Electric'))
-        )
+      # Load BEV data
+      data_paths_bev <- c(
+        "data/quantiles_rr_bev.parquet",
+        "../data/quantiles_rr_bev.parquet",
+        file.path(dirname(getwd()), "data", "quantiles_rr_bev.parquet")
+      )
 
-      # Create the plot exactly like 3-figs.R Figure 1
-      fig1 <- df_fig1 %>%
-        ggplot() +
-        geom_ribbon(
-          aes(
-            x = age_years,
-            ymin = rr25,
-            ymax = rr75,
-            fill = type
-          ),
-          alpha = 0.25) +
-        geom_line(
-          aes(
-            x = age_years,
-            y = rr50,
-            color = type,
-            group = type
+      data_path_bev <- NULL
+      for (path in data_paths_bev) {
+        if (file.exists(path)) {
+          data_path_bev <- path
+          break
+        }
+      }
+
+      quantiles_bev <- NULL
+      if (!is.null(data_path_bev)) {
+        quantiles_bev <- read_parquet(data_path_bev) %>%
+          mutate(age_years = age_months / 12) %>%
+          filter(between(age_years, 1, 8)) %>%
+          group_by(tesla, age_years) %>%
+          summarise(
+            rr25 = mean(rr25, na.rm = TRUE),
+            rr50 = mean(rr50, na.rm = TRUE),
+            rr75 = mean(rr75, na.rm = TRUE),
+            .groups = "drop"
           )
-        ) +
-        facet_wrap(vars(powertrain_label)) +
-        scale_x_continuous(
-          breaks = seq(1, 8, 1),
-          limits = c(1, 8)
-        ) +
-        scale_y_continuous(
-          labels = scales::comma,
-          breaks = seq(0, 1, 0.2)
-        ) +
-        coord_cartesian(ylim = c(0, 1)) +
-        scale_fill_manual(values = c(
-          color_cv, color_ev, color_ev, color_ev, color_tesla)
-        ) +
-        scale_color_manual(values = c(
-          color_ev, color_tesla, color_cv, color_cv, color_ev,
-          color_ev, color_ev, color_ev, color_ev, color_tesla)
-        ) +
-        theme_minimal(base_size = 13) +
-        theme(
-          panel.grid.minor = element_blank(),
-          strip.text = element_text(face = "bold", size = 14),
-          legend.position = "none"
-        ) +
-        labs(
-          x = "Vehicle age (years)",
-          y = 'Vehicle value retention rate'
-        ) +
-        geom_label(
-          data = data.frame(
-            x = c(5, 3.5, 3, 5, 3, 5, 3),
-            y = c(0.74, 0.95, 0.2, 0.74, 0.35, 0.74, 0.45),
-            label = c(
-              'Conventional', 'BEV (Tesla)', 'BEV (Non-Tesla)',
-              'Conventional', 'PHEV',
-              'Conventional', 'Hybrid'
-            ),
-            powertrain_label = as.factor(c(
-              rep('Battery Electric', 3), rep('Plug-in Hybrid', 2),
-              rep('Hybrid', 2))
-            )
-          ),
-          mapping = aes(x = x, y = y, label = label, color = label),
-          size = 3,
-          fill = "white",
-          alpha = 0.9,
-          label.size = 0.1
+      }
+
+      # Prepare data for plotting
+      # Get conventional baseline
+      conv_data <- quantiles_agg %>% filter(powertrain == "cv")
+
+      # Get other powertrains
+      hev_data <- quantiles_agg %>% filter(powertrain == "hev")
+      phev_data <- quantiles_agg %>% filter(powertrain == "phev")
+
+      # Get BEV data
+      if(!is.null(quantiles_bev) && nrow(quantiles_bev) > 0) {
+        bev_nontesla <- quantiles_bev %>% filter(tesla == 0)
+        bev_tesla <- quantiles_bev %>% filter(tesla == 1)
+      } else {
+        bev_nontesla <- data.frame()
+        bev_tesla <- data.frame()
+      }
+
+      # Create 3 panels using native Plotly with manual domain positioning
+      fig <- plot_ly()
+
+      # Panel configurations
+      panel_configs <- list(
+        list(title = "Hybrid", alt_data = hev_data, alt_label = "Hybrid", alt_color = "#00BA38"),
+        list(title = "Plug-in Hybrid", alt_data = phev_data, alt_label = "PHEV", alt_color = "#00BA38"),
+        list(title = "Battery Electric", bev_mode = TRUE)
+      )
+
+      # Calculate panel dimensions
+      n_panels <- 3
+      h_gap <- 0.02
+      panel_width <- (1 - (n_panels - 1) * h_gap) / n_panels
+
+      xaxes <- list()
+      yaxes <- list()
+      annotations <- list()
+
+      for(i in seq_along(panel_configs)) {
+        config <- panel_configs[[i]]
+
+        # Calculate domain
+        x_start <- (i - 1) * (panel_width + h_gap)
+        x_end <- x_start + panel_width
+
+        # Create unique axis names
+        xaxis_name <- if(i == 1) "x" else paste0("x", i)
+        yaxis_name <- if(i == 1) "y" else paste0("y", i)
+
+        # Prepare data for this panel
+        if(i == 3) {
+          # Battery Electric panel
+          groups <- list(
+            list(data = conv_data, name = "Conventional", color = "rgba(128, 128, 128, 1)", fill_color = "rgba(128, 128, 128, 0.25)")
+          )
+          if(nrow(bev_nontesla) > 0) {
+            groups[[length(groups) + 1]] <- list(data = bev_nontesla, name = "BEV (Non-Tesla)", color = "#00BA38", fill_color = "rgba(0, 186, 56, 0.25)")
+          }
+          if(nrow(bev_tesla) > 0) {
+            groups[[length(groups) + 1]] <- list(data = bev_tesla, name = "BEV (Tesla)", color = "#619CFF", fill_color = "rgba(97, 156, 255, 0.25)")
+          }
+        } else {
+          # Hybrid or PHEV panel
+          groups <- list(
+            list(data = conv_data, name = "Conventional", color = "rgba(128, 128, 128, 1)", fill_color = "rgba(128, 128, 128, 0.25)")
+          )
+          if(nrow(config$alt_data) > 0) {
+            groups[[length(groups) + 1]] <- list(data = config$alt_data, name = config$alt_label, color = config$alt_color, fill_color = "rgba(0, 186, 56, 0.25)")
+          }
+        }
+
+        # Add traces for each group
+        for(group in groups) {
+          if(nrow(group$data) > 0) {
+            # Add ribbon (lower bound)
+            fig <- fig %>%
+              add_trace(
+                data = group$data,
+                x = ~age_years,
+                y = ~rr25,
+                type = "scatter",
+                mode = "lines",
+                line = list(color = "transparent"),
+                showlegend = FALSE,
+                xaxis = xaxis_name,
+                yaxis = yaxis_name,
+                hoverinfo = "none",
+                name = group$name
+              )
+
+            # Add ribbon (upper bound)
+            fig <- fig %>%
+              add_trace(
+                data = group$data,
+                x = ~age_years,
+                y = ~rr75,
+                type = "scatter",
+                mode = "lines",
+                fill = "tonexty",
+                fillcolor = group$fill_color,
+                line = list(color = "transparent"),
+                showlegend = FALSE,
+                xaxis = xaxis_name,
+                yaxis = yaxis_name,
+                hoverinfo = "none",
+                name = group$name
+              )
+
+            # Add median line
+            fig <- fig %>%
+              add_trace(
+                data = group$data,
+                x = ~age_years,
+                y = ~rr50,
+                type = "scatter",
+                mode = "lines",
+                line = list(color = group$color, width = 2.5),
+                showlegend = FALSE,
+                xaxis = xaxis_name,
+                yaxis = yaxis_name,
+                hoverinfo = "none",
+                name = group$name
+              )
+          }
+        }
+
+        # Configure axes
+        xaxis_config <- list(
+          domain = c(x_start, x_end),
+          range = c(1, 8),
+          title = list(text = "Vehicle age (years)", font = list(size = 11)),
+          tickmode = "linear",
+          tick0 = 1,
+          dtick = 1,
+          showticklabels = TRUE
         )
 
-      return(fig1)
+        yaxis_config <- list(
+          domain = c(0, 1),
+          anchor = xaxis_name,
+          range = c(0, 1),
+          tickformat = ".0%",
+          title = if(i == 1) list(text = "Vehicle value retention rate", font = list(size = 11)) else "",
+          showticklabels = TRUE
+        )
+
+        if(i == 1) {
+          xaxes[["xaxis"]] <- xaxis_config
+          yaxes[["yaxis"]] <- yaxis_config
+        } else {
+          xaxes[[paste0("xaxis", i)]] <- xaxis_config
+          yaxes[[paste0("yaxis", i)]] <- yaxis_config
+        }
+
+        # Add panel title
+        annotations[[length(annotations) + 1]] <- list(
+          x = x_start + panel_width / 2,
+          y = 1.05,
+          text = paste0("<b>", config$title, "</b>"),
+          xref = "paper",
+          yref = "paper",
+          xanchor = "center",
+          yanchor = "bottom",
+          showarrow = FALSE,
+          font = list(size = 13)
+        )
+      }
+
+      # Apply layout
+      layout_args <- c(
+        list(
+          annotations = annotations,
+          showlegend = FALSE,
+          hovermode = "closest",
+          margin = list(t = 80, b = 50, l = 80, r = 50)
+        ),
+        xaxes,
+        yaxes
+      )
+
+      fig <- do.call(layout, c(list(fig), layout_args))
+
+      fig <- fig %>%
+        config(
+          displayModeBar = TRUE,
+          modeBarButtonsToRemove = c("lasso2d", "select2d"),
+          toImageButtonOptions = list(format = "png", filename = "retention_plot")
+        )
+
+      return(fig)
 
     }, error = function(e) {
-      p <- ggplot() +
-        labs(title = paste("Error creating plot:", e$message)) +
-        theme_minimal()
-      return(p)
+      return(plot_ly() %>%
+               add_annotations(text = paste("Error:", e$message),
+                             xref = "paper", yref = "paper",
+                             x = 0.5, y = 0.5, showarrow = FALSE,
+                             font = list(size = 14, color = "red")))
     })
   })
 
-  # Custom Retention Plot Builder
-  output$custom_retention_plot <- renderPlot({
+  # Custom Retention Plot Builder (Plotly Interactive)
+  output$custom_retention_plot <- renderPlotly({
     # React to button click OR auto-load on page open
     input$update_custom_plot
 
@@ -1058,7 +1291,7 @@ output$cdf_plot <- renderPlot({
       # Handle each selected type
       if("conventional" %in% selected_types) {
         conv_data <- raw_data %>%
-          filter(powertrain == "conventional") %>%
+          filter(powertrain == "cv") %>%
           mutate(age_years = age_months / 12) %>%
           filter(between(age_years, 1, 8), !is.na(rr25), !is.na(rr50), !is.na(rr75)) %>%
           group_by(age_years) %>%
@@ -1073,7 +1306,7 @@ output$cdf_plot <- renderPlot({
       }
 
       if("hybrid" %in% selected_types) {
-        hybrid_data <- filtered_data %>%
+        hybrid_data <- raw_data %>%
           filter(powertrain == "hev") %>%
           mutate(age_years = age_months / 12) %>%
           filter(between(age_years, 1, 8), !is.na(rr25), !is.na(rr50), !is.na(rr75)) %>%
@@ -1085,23 +1318,11 @@ output$cdf_plot <- renderPlot({
             .groups = "drop"
           ) %>%
           mutate(vehicle_type = "Hybrid", type = "hybrid")
-
-        if(nrow(hybrid_data) == 0) {
-          # Fallback sample data
-          sample_ages <- seq(1, 8, 0.1)
-          hybrid_data <- tibble(
-            age_years = sample_ages,
-            rr25 = 0.75 - 0.06 * sample_ages,
-            rr50 = 0.77 - 0.06 * sample_ages,
-            rr75 = 0.79 - 0.06 * sample_ages,
-            vehicle_type = "Hybrid", type = "hybrid"
-          )
-        }
         plot_data[["hybrid"]] <- hybrid_data
       }
 
       if("phev" %in% selected_types) {
-        phev_data <- filtered_data %>%
+        phev_data <- raw_data %>%
           filter(powertrain == "phev") %>%
           mutate(age_years = age_months / 12) %>%
           filter(between(age_years, 1, 8), !is.na(rr25), !is.na(rr50), !is.na(rr75)) %>%
@@ -1113,155 +1334,205 @@ output$cdf_plot <- renderPlot({
             .groups = "drop"
           ) %>%
           mutate(vehicle_type = "Plug-in Hybrid", type = "phev")
-
-        if(nrow(phev_data) == 0) {
-          # Fallback sample data
-          sample_ages <- seq(1, 8, 0.1)
-          phev_data <- tibble(
-            age_years = sample_ages,
-            rr25 = 0.67 - 0.07 * sample_ages,
-            rr50 = 0.69 - 0.07 * sample_ages,
-            rr75 = 0.71 - 0.07 * sample_ages,
-            vehicle_type = "Plug-in Hybrid", type = "phev"
-          )
-        }
         plot_data[["phev"]] <- phev_data
       }
 
       if("bev" %in% selected_types) {
-        bev_data <- filtered_data %>%
-          filter(powertrain == "bev") %>%
-          mutate(age_years = age_months / 12) %>%
-          filter(between(age_years, 1, 8), !is.na(rr25), !is.na(rr50), !is.na(rr75)) %>%
-          group_by(age_years) %>%
-          summarise(
-            rr25 = mean(rr25, na.rm = TRUE),
-            rr50 = mean(rr50, na.rm = TRUE),
-            rr75 = mean(rr75, na.rm = TRUE),
-            .groups = "drop"
-          ) %>%
-          mutate(vehicle_type = "Battery Electric", type = "bev")
+        # Load BEV parquet file for non-Tesla BEVs
+        data_paths_bev <- c(
+          "data/quantiles_rr_bev.parquet",
+          "../data/quantiles_rr_bev.parquet",
+          file.path(dirname(getwd()), "data", "quantiles_rr_bev.parquet")
+        )
 
-        if(nrow(bev_data) == 0) {
-          # Fallback sample data
-          sample_ages <- seq(1, 8, 0.1)
-          bev_data <- tibble(
-            age_years = sample_ages,
-            rr25 = 0.58 - 0.09 * sample_ages,
-            rr50 = 0.6 - 0.09 * sample_ages,
-            rr75 = 0.62 - 0.09 * sample_ages,
-            vehicle_type = "Battery Electric", type = "bev"
-          )
+        data_path_bev <- NULL
+        for (path in data_paths_bev) {
+          if (file.exists(path)) {
+            data_path_bev <- path
+            break
+          }
         }
-        plot_data[["bev"]] <- bev_data
+
+        if (!is.null(data_path_bev)) {
+          bev_data <- read_parquet(data_path_bev) %>%
+            filter(tesla == 0) %>%
+            mutate(age_years = age_months / 12) %>%
+            filter(between(age_years, 1, 8)) %>%
+            group_by(age_years) %>%
+            summarise(
+              rr25 = mean(rr25, na.rm = TRUE),
+              rr50 = mean(rr50, na.rm = TRUE),
+              rr75 = mean(rr75, na.rm = TRUE),
+              .groups = "drop"
+            ) %>%
+            mutate(vehicle_type = "Battery Electric", type = "bev")
+          plot_data[["bev"]] <- bev_data
+        }
       }
 
       if("tesla" %in% selected_types) {
-        tesla_data <- filtered_data %>%
-          filter(powertrain == "bev", grepl("tesla", tolower(vehicle_type), fixed = TRUE)) %>%
-          mutate(age_years = age_months / 12) %>%
-          filter(between(age_years, 1, 8), !is.na(rr25), !is.na(rr50), !is.na(rr75)) %>%
-          group_by(age_years) %>%
-          summarise(
-            rr25 = mean(rr25, na.rm = TRUE),
-            rr50 = mean(rr50, na.rm = TRUE),
-            rr75 = mean(rr75, na.rm = TRUE),
-            .groups = "drop"
-          ) %>%
-          mutate(vehicle_type = "Tesla", type = "tesla")
+        # Load BEV parquet file for Tesla vehicles
+        data_paths_bev <- c(
+          "data/quantiles_rr_bev.parquet",
+          "../data/quantiles_rr_bev.parquet",
+          file.path(dirname(getwd()), "data", "quantiles_rr_bev.parquet")
+        )
 
-        if(nrow(tesla_data) == 0) {
-          # Fallback sample data
-          sample_ages <- seq(1, 8, 0.1)
-          tesla_data <- tibble(
-            age_years = sample_ages,
-            rr25 = 0.88 - 0.05 * sample_ages,
-            rr50 = 0.9 - 0.05 * sample_ages,
-            rr75 = 0.92 - 0.05 * sample_ages,
-            vehicle_type = "Tesla", type = "tesla"
-          )
+        data_path_bev <- NULL
+        for (path in data_paths_bev) {
+          if (file.exists(path)) {
+            data_path_bev <- path
+            break
+          }
         }
-        plot_data[["tesla"]] <- tesla_data
+
+        if (!is.null(data_path_bev)) {
+          tesla_data <- read_parquet(data_path_bev) %>%
+            filter(tesla == 1) %>%
+            mutate(age_years = age_months / 12) %>%
+            filter(between(age_years, 1, 8)) %>%
+            group_by(age_years) %>%
+            summarise(
+              rr25 = mean(rr25, na.rm = TRUE),
+              rr50 = mean(rr50, na.rm = TRUE),
+              rr75 = mean(rr75, na.rm = TRUE),
+              .groups = "drop"
+            ) %>%
+            mutate(vehicle_type = "Tesla", type = "tesla")
+          plot_data[["tesla"]] <- tesla_data
+        }
       }
 
       # Combine all selected data
       final_data <- bind_rows(plot_data)
 
       if(nrow(final_data) == 0) {
-        p <- ggplot() +
-          labs(title = "No vehicle types selected",
-               subtitle = "Please select at least one vehicle type to compare") +
-          theme_minimal()
+        p <- plot_ly() %>%
+          layout(
+            title = list(text = "No vehicle types selected<br><sub>Please select at least one vehicle type to compare</sub>"),
+            xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+            yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE)
+          )
         return(p)
       }
 
-      # Create the plot
-      p <- final_data %>%
-        ggplot(aes(x = age_years, color = vehicle_type)) +
-        geom_line(aes(y = rr50), linewidth = 1.2) +
-        scale_x_continuous(
-          breaks = seq(1, 8, 1),
-          limits = c(1, 8)
-        ) +
-        scale_y_continuous(
-          labels = scales::comma,
-          breaks = seq(0, 1, 0.2),
-          limits = c(0, 1)
-        ) +
-        scale_color_manual(values = c(
-          "Conventional" = color_cv,
-          "Hybrid" = color_ev,
-          "Plug-in Hybrid" = color_phev,
-          "Battery Electric" = color_ev,
-          "Tesla" = color_tesla
-        )) +
-        labs(
-          title = "Custom Vehicle Retention Rate Comparison",
-          x = "Vehicle age (years)",
-          y = "Vehicle value retention rate",
-          color = "Vehicle Type"
-        ) +
-        theme_minimal(base_size = 13) +
-        theme(
-          panel.grid.minor = element_blank(),
-          legend.position = "bottom"
+      # Create native plotly plot
+      # Define color mapping (line colors)
+      color_mapping <- list(
+        "Conventional" = color_cv,
+        "Hybrid" = color_ev,
+        "Plug-in Hybrid" = color_phev,
+        "Battery Electric" = color_ev,
+        "Tesla" = color_tesla
+      )
+
+      # Define fill color mapping (hardcoded rgba to avoid col2rgb issues)
+      fill_mapping <- list(
+        "Conventional" = 'rgba(107,107,107,0.25)',  # grey42
+        "Hybrid" = 'rgba(0,186,56,0.25)',           # #00BA38
+        "Plug-in Hybrid" = 'rgba(230,159,0,0.25)',  # #E69F00
+        "Battery Electric" = 'rgba(0,186,56,0.25)', # #00BA38
+        "Tesla" = 'rgba(97,156,255,0.25)'           # #619CFF
+      )
+
+      p <- plot_ly()
+
+      # Get unique vehicle types in the data
+      vehicle_types <- unique(final_data$vehicle_type)
+
+      # Determine whether to show confidence ribbons
+      show_ribbons <- if(!is.null(input$show_confidence_ribbons)) input$show_confidence_ribbons else FALSE
+
+      # Add ribbons first (if enabled)
+      if(show_ribbons) {
+        for(vt in vehicle_types) {
+          vt_data <- final_data %>% filter(vehicle_type == vt)
+
+          if(nrow(vt_data) > 0) {
+            line_color <- color_mapping[[vt]]
+            fill_color <- fill_mapping[[vt]]
+
+            p <- p %>%
+              add_ribbons(
+                data = vt_data,
+                x = ~age_years,
+                ymin = ~rr25,
+                ymax = ~rr75,
+                fillcolor = fill_color,
+                line = list(width = 0),
+                showlegend = FALSE,
+                hoverinfo = 'skip',
+                name = vt
+              )
+          }
+        }
+      }
+
+      # Add lines on top
+      for(vt in vehicle_types) {
+        vt_data <- final_data %>% filter(vehicle_type == vt)
+
+        if(nrow(vt_data) > 0) {
+          line_color <- color_mapping[[vt]]
+
+          p <- p %>%
+            add_trace(
+              data = vt_data,
+              x = ~age_years,
+              y = ~rr50,
+              type = 'scatter',
+              mode = 'lines',
+              line = list(color = line_color, width = 2.5),
+              name = vt,
+              showlegend = TRUE,
+              hovertemplate = paste0(
+                "<b>", vt, "</b><br>",
+                "Age: %{x:.1f} years<br>",
+                "Retention Rate: %{y:.2%}<br>",
+                "<extra></extra>"
+              )
+            )
+        }
+      }
+
+      # Configure layout
+      p <- p %>%
+        layout(
+          title = list(
+            text = "Custom Vehicle Retention Rate Comparison",
+            font = list(size = 16)
+          ),
+          xaxis = list(
+            title = "Vehicle age (years)",
+            range = c(1, 8),
+            dtick = 1,
+            gridcolor = '#e0e0e0',
+            showgrid = TRUE
+          ),
+          yaxis = list(
+            title = "Vehicle value retention rate",
+            range = c(0, 1),
+            tickformat = ',.0%',
+            dtick = 0.2,
+            gridcolor = '#e0e0e0',
+            showgrid = TRUE
+          ),
+          legend = list(
+            orientation = "h",
+            x = 0.5,
+            xanchor = "center",
+            y = -0.15,
+            title = list(text = "Vehicle Type")
+          ),
+          hovermode = 'closest',
+          plot_bgcolor = 'white',
+          paper_bgcolor = 'white'
+        ) %>%
+        config(
+          displayModeBar = TRUE,
+          modeBarButtonsToRemove = c('lasso2d', 'select2d'),
+          toImageButtonOptions = list(format = 'png', filename = 'custom_retention_plot')
         )
-
-      # Add confidence ribbons if requested
-      if(input$show_confidence_ribbons) {
-        p <- p +
-          geom_ribbon(
-            aes(ymin = rr25, ymax = rr75, fill = vehicle_type),
-            alpha = 0.25,
-            color = NA
-          ) +
-          scale_fill_manual(values = c(
-            "Conventional" = color_cv,
-            "Hybrid" = color_ev,
-            "Plug-in Hybrid" = color_phev,
-            "Battery Electric" = color_ev,
-            "Tesla" = color_tesla
-          ), guide = "none")
-      }
-
-      # Add labels if requested
-      if(input$show_labels_custom) {
-        # Create label positions
-        label_data <- final_data %>%
-          group_by(vehicle_type, type) %>%
-          filter(age_years == max(age_years)) %>%
-          ungroup()
-
-        p <- p +
-          geom_label(
-            data = label_data,
-            aes(x = age_years - 0.5, y = rr50, label = vehicle_type, color = vehicle_type),
-            fill = "white",
-            alpha = 0.8,
-            size = 3,
-            show.legend = FALSE
-          )
-      }
 
       return(p)
 
@@ -1269,7 +1540,7 @@ output$cdf_plot <- renderPlot({
       p <- ggplot() +
         labs(title = paste("Error creating custom plot:", e$message)) +
         theme_minimal()
-      return(p)
+      return(ggplotly(p))
     })
   })
 
