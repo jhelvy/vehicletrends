@@ -20,14 +20,14 @@ ui <- fluidPage(
                         "Company A (Cars Produced):",
                         min = 0,
                         max = 10000,
-                        value = 5000,
+                        value = 3000,
                         step = 100),
             
             sliderInput("companyB",
                         "Company B (Cars Produced):",
                         min = 0,
                         max = 10000,
-                        value = 3000,
+                        value = 2500,
                         step = 100),
             
             sliderInput("companyC",
@@ -37,8 +37,58 @@ ui <- fluidPage(
                         value = 2000,
                         step = 100),
             
+            sliderInput("companyD",
+                        "Company D (Cars Produced):",
+                        min = 0,
+                        max = 10000,
+                        value = 1500,
+                        step = 100),
+            
+            sliderInput("companyE",
+                        "Company E (Cars Produced):",
+                        min = 0,
+                        max = 10000,
+                        value = 1200,
+                        step = 100),
+            
+            sliderInput("companyF",
+                        "Company F (Cars Produced):",
+                        min = 0,
+                        max = 10000,
+                        value = 1000,
+                        step = 100),
+            
+            sliderInput("companyG",
+                        "Company G (Cars Produced):",
+                        min = 0,
+                        max = 10000,
+                        value = 800,
+                        step = 100),
+            
+            sliderInput("companyH",
+                        "Company H (Cars Produced):",
+                        min = 0,
+                        max = 10000,
+                        value = 600,
+                        step = 100),
+            
+            sliderInput("companyI",
+                        "Company I (Cars Produced):",
+                        min = 0,
+                        max = 10000,
+                        value = 400,
+                        step = 100),
+            
+            sliderInput("companyJ",
+                        "Company J (Cars Produced):",
+                        min = 0,
+                        max = 10000,
+                        value = 300,
+                        step = 100),
+            
             hr(),
             actionButton("reset", "Reset to Default", class = "btn-secondary"),
+            actionButton("clear", "Clear All", class = "btn-outline-secondary"),
             hr(),
             
             h4("Quick Scenarios:"),
@@ -60,8 +110,8 @@ ui <- fluidPage(
                              )),
                              column(4, wellPanel(
                                  h4("HHI Score (Decimal)"),
-                                 textOutput("hhiScore"),
-                                 tags$style(type="text/css", "#hhiScore {font-size: 24px; font-weight: bold; color: #e74c3c;}")
+                                 htmlOutput("hhiScore"),
+                                 tags$style(type="text/css", "#hhiScore {font-size: 24px; font-weight: bold;}")
                              )),
                              column(4, wellPanel(
                                  h4("Market Status"),
@@ -71,7 +121,7 @@ ui <- fluidPage(
                          ),
                          
                          h3("Market Share Distribution"),
-                         plotOutput("pieChart", height = "300px"),
+                         plotOutput("pieChart", height = "400px"),
                          
                          h3("Company Details"),
                          tableOutput("companyTable"),
@@ -154,11 +204,16 @@ ui <- fluidPage(
                          p("The HHI squares market shares, which means bigger companies have disproportionate influence:"),
                          
                          div(style = "background-color: #e7f3ff; padding: 15px; margin: 10px 0; border-radius: 5px;",
-                             strong("Example with 3 companies:"), br(), br(),
-                             "• Company with 10% share (0.10): contributes 0.01 to HHI (0.10² = 0.01)", br(),
-                             "• Company with 20% share (0.20): contributes 0.04 to HHI (0.20² = 0.04) - 4x more!", br(),
-                             "• Company with 40% share (0.40): contributes 0.16 to HHI (0.40² = 0.16) - 16x more!", br(), br(),
-                             "This means the HHI heavily weights dominant players, making it very sensitive to market concentration."
+                             strong("Example with 10 equally-sized companies:"), br(), br(),
+                             "• Each company: 10% share (0.10 fraction)", br(),
+                             "• Each contributes: (0.10)² = 0.01 to HHI", br(),
+                             "• Total HHI: 10 × 0.01 = 0.10 (Competitive!)", br(), br(),
+                             strong("Example with one dominant player:"), br(), br(),
+                             "• Company A: 50% share → contributes 0.25 to HHI", br(),
+                             "• Company B: 10% share → contributes 0.01 to HHI (25x less!)", br(),
+                             "• 5 others at 8% each → contribute 0.0064 each", br(),
+                             "• Total HHI ≈ 0.28 (Highly Concentrated!)", br(), br(),
+                             "This squaring heavily weights dominant players, making HHI very sensitive to concentration."
                          ),
                          
                          hr(),
@@ -191,10 +246,13 @@ server <- function(input, output, session) {
     
     # Reactive values for calculations using tidyverse
     marketData <- reactive({
-        # Create data frame
+        # Create data frame with all 10 companies
         companies_df <- tibble(
-            company = c("Company A", "Company B", "Company C"),
-            production = c(input$companyA, input$companyB, input$companyC)
+            company = c("Company A", "Company B", "Company C", "Company D", "Company E",
+                        "Company F", "Company G", "Company H", "Company I", "Company J"),
+            production = c(input$companyA, input$companyB, input$companyC, input$companyD, 
+                           input$companyE, input$companyF, input$companyG, input$companyH,
+                           input$companyI, input$companyJ)
         )
         
         total <- sum(companies_df$production)
@@ -235,10 +293,19 @@ server <- function(input, output, session) {
         format(data$total, big.mark = ",", scientific = FALSE)
     })
     
-    # Output: HHI score
+    # Output: HHI score with dynamic color
     output$hhiScore <- renderText({
         data <- marketData()
-        sprintf("%.4f", data$hhi)
+        hhi <- data$hhi
+        
+        # Determine color based on thresholds
+        color <- case_when(
+            hhi < 0.15 ~ "#28a745",
+            hhi < 0.25 ~ "#ffc107",
+            TRUE ~ "#dc3545"
+        )
+        
+        paste0("<span style='color:", color, "'>", sprintf("%.4f", hhi), "</span>")
     })
     
     # Output: Market status with color
@@ -264,22 +331,36 @@ server <- function(input, output, session) {
                 annotate("text", x = 0, y = 0, label = "No production data", size = 6, color = "gray50") +
                 theme_void()
         } else {
+            # Filter out companies with very small market share for cleaner labels
             data$data %>%
-                mutate(label = paste0(company, "\n", round(market_share_percent, 1), "%")) %>%
+                mutate(
+                    company_letter = LETTERS[1:10],  # Use A through J
+                    label = if_else(market_share_percent >= 3, 
+                                    paste0(company_letter, "\n", round(market_share_percent, 1), "%"),
+                                    company_letter),
+                    # Order by market share for better visualization
+                    company = fct_reorder(company, market_share_percent, .desc = TRUE)
+                ) %>%
                 ggplot(aes(x = "", y = market_share_percent, fill = company)) +
-                geom_col(width = 1, color = "white", size = 2) +
+                geom_col(width = 1, color = "white", size = 1.5) +
                 coord_polar("y", start = 0) +
                 geom_text(aes(label = label), 
                           position = position_stack(vjust = 0.5),
-                          size = 5, fontface = "bold", color = "white") +
-                scale_fill_manual(values = c("#3498db", "#e74c3c", "#2ecc71")) +
+                          size = 3.5, fontface = "bold", color = "white") +
+                scale_fill_manual(
+                    values = c("#3498db", "#e74c3c", "#2ecc71", "#9b59b6", 
+                               "#f39c12", "#1abc9c", "#34495e", "#e67e22",
+                               "#95a5a6", "#16a085"),
+                    labels = LETTERS[1:10]
+                ) +
                 theme_void() +
                 theme(
-                    legend.position = "bottom",
-                    legend.text = element_text(size = 12),
-                    legend.title = element_text(size = 14, face = "bold")
+                    legend.position = "right",
+                    legend.text = element_text(size = 11),
+                    legend.title = element_text(size = 12, face = "bold")
                 ) +
-                labs(fill = "Company")
+                labs(fill = "Company") +
+                guides(fill = guide_legend(ncol = 1))
         }
     })
     
@@ -350,38 +431,92 @@ server <- function(input, output, session) {
     
     # Reset button
     observeEvent(input$reset, {
-        updateSliderInput(session, "companyA", value = 5000)
-        updateSliderInput(session, "companyB", value = 3000)
+        updateSliderInput(session, "companyA", value = 3000)
+        updateSliderInput(session, "companyB", value = 2500)
         updateSliderInput(session, "companyC", value = 2000)
+        updateSliderInput(session, "companyD", value = 1500)
+        updateSliderInput(session, "companyE", value = 1200)
+        updateSliderInput(session, "companyF", value = 1000)
+        updateSliderInput(session, "companyG", value = 800)
+        updateSliderInput(session, "companyH", value = 600)
+        updateSliderInput(session, "companyI", value = 400)
+        updateSliderInput(session, "companyJ", value = 300)
+    })
+    
+    # Clear all button
+    observeEvent(input$clear, {
+        updateSliderInput(session, "companyA", value = 0)
+        updateSliderInput(session, "companyB", value = 0)
+        updateSliderInput(session, "companyC", value = 0)
+        updateSliderInput(session, "companyD", value = 0)
+        updateSliderInput(session, "companyE", value = 0)
+        updateSliderInput(session, "companyF", value = 0)
+        updateSliderInput(session, "companyG", value = 0)
+        updateSliderInput(session, "companyH", value = 0)
+        updateSliderInput(session, "companyI", value = 0)
+        updateSliderInput(session, "companyJ", value = 0)
     })
     
     # Scenario buttons
     observeEvent(input$scenario1, {
-        # Equal competition: HHI = 3 × (1/3)² = 0.333
-        updateSliderInput(session, "companyA", value = 3333)
-        updateSliderInput(session, "companyB", value = 3333)
-        updateSliderInput(session, "companyC", value = 3334)
+        # Equal competition: 10 companies with equal share
+        # HHI = 10 × (1/10)² = 0.10
+        equal_value <- 1000
+        updateSliderInput(session, "companyA", value = equal_value)
+        updateSliderInput(session, "companyB", value = equal_value)
+        updateSliderInput(session, "companyC", value = equal_value)
+        updateSliderInput(session, "companyD", value = equal_value)
+        updateSliderInput(session, "companyE", value = equal_value)
+        updateSliderInput(session, "companyF", value = equal_value)
+        updateSliderInput(session, "companyG", value = equal_value)
+        updateSliderInput(session, "companyH", value = equal_value)
+        updateSliderInput(session, "companyI", value = equal_value)
+        updateSliderInput(session, "companyJ", value = equal_value)
     })
     
     observeEvent(input$scenario2, {
-        # Moderate concentration: HHI ≈ 0.38
-        updateSliderInput(session, "companyA", value = 5000)
-        updateSliderInput(session, "companyB", value = 3000)
-        updateSliderInput(session, "companyC", value = 2000)
+        # Moderate concentration: Designed to be in the 0.15-0.25 range
+        # HHI ≈ 0.19 (squarely in moderate zone)
+        updateSliderInput(session, "companyA", value = 3500)
+        updateSliderInput(session, "companyB", value = 2500)
+        updateSliderInput(session, "companyC", value = 1500)
+        updateSliderInput(session, "companyD", value = 1000)
+        updateSliderInput(session, "companyE", value = 800)
+        updateSliderInput(session, "companyF", value = 600)
+        updateSliderInput(session, "companyG", value = 400)
+        updateSliderInput(session, "companyH", value = 300)
+        updateSliderInput(session, "companyI", value = 250)
+        updateSliderInput(session, "companyJ", value = 150)
     })
     
     observeEvent(input$scenario3, {
-        # High concentration: HHI ≈ 0.54
-        updateSliderInput(session, "companyA", value = 7000)
-        updateSliderInput(session, "companyB", value = 2000)
-        updateSliderInput(session, "companyC", value = 1000)
+        # High concentration: One dominant player
+        # HHI ≈ 0.30
+        updateSliderInput(session, "companyA", value = 5000)
+        updateSliderInput(session, "companyB", value = 1500)
+        updateSliderInput(session, "companyC", value = 1200)
+        updateSliderInput(session, "companyD", value = 1000)
+        updateSliderInput(session, "companyE", value = 800)
+        updateSliderInput(session, "companyF", value = 600)
+        updateSliderInput(session, "companyG", value = 400)
+        updateSliderInput(session, "companyH", value = 300)
+        updateSliderInput(session, "companyI", value = 200)
+        updateSliderInput(session, "companyJ", value = 100)
     })
     
     observeEvent(input$scenario4, {
-        # Near monopoly: HHI ≈ 0.82
-        updateSliderInput(session, "companyA", value = 9000)
-        updateSliderInput(session, "companyB", value = 700)
-        updateSliderInput(session, "companyC", value = 300)
+        # Near monopoly: One company dominates
+        # HHI ≈ 0.70
+        updateSliderInput(session, "companyA", value = 8000)
+        updateSliderInput(session, "companyB", value = 500)
+        updateSliderInput(session, "companyC", value = 400)
+        updateSliderInput(session, "companyD", value = 300)
+        updateSliderInput(session, "companyE", value = 250)
+        updateSliderInput(session, "companyF", value = 200)
+        updateSliderInput(session, "companyG", value = 150)
+        updateSliderInput(session, "companyH", value = 100)
+        updateSliderInput(session, "companyI", value = 75)
+        updateSliderInput(session, "companyJ", value = 25)
     })
 }
 
