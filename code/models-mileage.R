@@ -41,7 +41,9 @@ for (i in 1:nrow(combinations)) {
 
 mileage <- rbindlist(results)
 
-mileage
+mileage %>%
+  distinct(vehicle_type, powertrain, coef) %>%
+  mutate(coef = round(coef))
 
 write_csv(
   mileage,
@@ -63,12 +65,13 @@ get_annual_mileage_make_model <- function(row) {
   )
 
   # Predict retention rates at different ages
-  pred_data <- data.frame(age_years = seq(2, 9, 0.5))
-  pred_data$mileage_predicted <- predict(model, newdata = pred_data)
-  pred_data$make <- row$make
-  pred_data$model <- row$model
-  pred_data$vehicle_type <- row$vehicle_type
-  pred_data$powertrain <- row$powertrain
+  pred_data <- data.frame(
+    make = row$make,
+    model = row$model,
+    vehicle_type = row$vehicle_type,
+    powertrain = row$powertrain
+  )
+
   pred_data$coef <- coef(model)["age_years"]
 
   return(pred_data)
