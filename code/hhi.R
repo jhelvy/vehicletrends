@@ -1,31 +1,23 @@
 # Load functions, libraries, and other settings
 source(here::here("code", "0-setup.R"))
 
-tract_dt <- read_parquet(here('data_local', 'tract_dt.parquet')) %>%
-  rename(income = med_inc_hh) %>%
-  mutate(
-    income = parse_number(income),
-    inc_bin = case_when(
-      income <= 50000 ~ '< $50k',
-      income > 50000 & income <= 85000 ~ '$50k - $85k',
-      income > 85000 & income <= 120000 ~ '$85k - $120k',
-      TRUE ~ '> $120k'
-    )
-  )
-
-# Total counts only
-
-counts_total_18 <- open_dataset(
-  '/Users/jhelvy/gh/research/vehicletrends/data_local/counts-2018/counts_30.parquet'
-)
-
-counts_total_24 <- open_dataset(
-  '/Users/jhelvy/gh/research/vehicletrends/data_local/counts-2024/counts_30.parquet'
-)
-
 font <- "Arial"
 col_red <- "#FF0000"
 col_blue <- "#0000FF"
+
+# Import counts data to compute HHI
+
+counts_total_18 <- open_dataset(here(
+  'data_local',
+  'counts-2018',
+  'counts_30.parquet'
+))
+
+counts_total_24 <- open_dataset(here(
+  'data_local',
+  'counts-2024',
+  'counts_30.parquet'
+))
 
 get_hhi <- function(counts, var) {
   result <- counts %>%
@@ -45,7 +37,20 @@ get_hhi <- function(counts, var) {
   return(result)
 }
 
-# HHI by powertrain ----
+summarise_hhi <- function(hhi) {
+  hhi %>%
+    group_by(powertrain, year) %>%
+    summarise(
+      median = median(hhi),
+      q25 = quantile(hhi, 0.25),
+      q75 = quantile(hhi, 0.75),
+      IQR = IQR(hhi),
+      upper = q75 + 1.5 * IQR,
+      lower = q25 - 1.5 * IQR
+    )
+}
+
+# Compute HHIs
 
 hhi_make <- bind_rows(
   get_hhi(counts_total_18, make) %>%
@@ -53,6 +58,37 @@ hhi_make <- bind_rows(
   get_hhi(counts_total_24, make) %>%
     mutate(year = "2024")
 )
+
+hhi_type <- bind_rows(
+  get_hhi(counts_total_18, vehicle_type) %>%
+    mutate(year = "2018"),
+  get_hhi(counts_total_24, vehicle_type) %>%
+    mutate(year = "2024")
+)
+
+hhi_price <- bind_rows(
+  get_hhi(counts_total_18, price_bin) %>%
+    mutate(year = "2018"),
+  get_hhi(counts_total_24, price_bin) %>%
+    mutate(year = "2024")
+)
+
+write_csv(
+  summarise_hhi(hhi_make),
+  here('data', 'hhi_make.csv')
+)
+
+write_csv(
+  summarise_hhi(hhi_type),
+  here('data', 'hhi_type.csv')
+)
+
+write_csv(
+  summarise_hhi(hhi_price),
+  here('data', 'hhi_price.csv')
+)
+
+# ggplots ----
 
 hhi_make %>%
   clean_factors_powertrain() %>%
@@ -88,22 +124,6 @@ hhi_make %>%
     subtitle = 'Higher number indicates greater concentration by brand'
   )
 
-ggsave(
-  here("figs", "hhi_make_powertrain.png"),
-  width = 7,
-  height = 5,
-  dpi = 300
-)
-
-# HHI vehicle type ----
-
-hhi_type <- bind_rows(
-  get_hhi(counts_total_18, vehicle_type) %>%
-    mutate(year = "2018"),
-  get_hhi(counts_total_24, vehicle_type) %>%
-    mutate(year = "2024")
-)
-
 hhi_type %>%
   clean_factors_powertrain() %>%
   ggplot() +
@@ -138,16 +158,6 @@ hhi_type %>%
     subtitle = 'Higher number indicates greater concentration by brand'
   )
 
-
-# HHI price_bin ----
-
-hhi_price <- bind_rows(
-  get_hhi(counts_total_18, price_bin) %>%
-    mutate(year = "2018"),
-  get_hhi(counts_total_24, price_bin) %>%
-    mutate(year = "2024")
-)
-
 hhi_price %>%
   clean_factors_powertrain() %>%
   ggplot() +
@@ -181,68 +191,3 @@ hhi_price %>%
     title = 'Price bin HHI by powertrain',
     subtitle = 'Higher number indicates greater concentration by brand'
   )
-
-
-bind_rows(
-  hhi_price %>%
-    mutate(type = 'Price bin'),
-  hhi_make %>%
-    mutate(type = 'Vehicle Brand'),
-  hhi_type %>%
-    mutate(type = 'Vehicle Type'),
-) %>%
-  group_by(powertrain, type, year) %>%
-  summarise(hhi = mean(hhi)) %>%
-  clean_factors_powertrain() %>%
-  pivot_wider(
-    names_from = year,
-    values_from = hhi
-  ) %>%
-  rename(y18 = `2018`, y24 = `2024`) %>%
-  ggplot() +
-  geom_segment(
-    aes(
-      x = y18,
-      xend = y24,
-      y = powertrain
-    ),
-    color = "grey60",
-    linewidth = 0.8
-  ) +
-  geom_point(
-    aes(
-      x = y18,
-      y = powertrain
-    ),
-    color = 'red',
-    size = 3
-  ) +
-  geom_point(
-    aes(
-      x = y24,
-      y = powertrain
-    ),
-    color = 'blue',
-    size = 3
-  ) +
-  scale_x_continuous(
-    limits = c(0, 1),
-    breaks = seq(0, 1, 0.2)
-  ) +
-  labs(
-    x = 'HHI',
-    y = 'Powertrain',
-    title = "Change in mean HHI between <span style = 'color: red;'>2018</span> and <span style = 'color: blue;'>2024</span> by powertrain",
-    subtitle = 'HHI separately computed by price bin, vehicle brand, and vehicle type'
-  ) +
-  facet_wrap(vars(type)) +
-  theme_minimal_vgrid(font_family = font, font_size = 16) +
-  theme(
-    strip.background = element_rect("grey80"),
-    panel.grid.minor = element_blank(),
-    plot.title.position = "plot",
-    plot.title = element_markdown(),
-    panel.background = element_rect(fill = 'white', color = NA),
-    plot.background = element_rect(fill = 'white', color = NA)
-  ) +
-  panel_border()
