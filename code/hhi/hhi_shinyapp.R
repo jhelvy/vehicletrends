@@ -195,54 +195,115 @@ ui <- page_sidebar(
         nav_panel(
             "Learn",
             
-            card(
-                card_header("What is HHI?"),
-                markdown("
-**The Herfindahl-Hirschman Index (HHI)** measures how concentrated a market is.
-
-### How it Works
-1. Calculate each company's market share (as a decimal, like 0.25 for 25%)
-2. Square each market share
-3. Add them all together
-
-### The Scale (0 to 1)
-- **0.00 to 0.15** = 🟢 Competitive Market (many companies, good for consumers)
-- **0.15 to 0.25** = 🟡 Moderately Concentrated (a few larger players emerging)
-- **0.25 to 1.00** = 🔴 Highly Concentrated (one or two companies dominate)
-
-### Why It Matters
-Government regulators use HHI to:
-- Evaluate merger proposals
-- Protect consumers from monopolies
-- Ensure fair competition
-
-**A market with HHI above 0.25 typically raises antitrust concerns.**
-        ")
-            ),
-            
-            card(
-                card_header("Understanding the Math"),
-                markdown("
-### Why Square Market Shares?
-
-Squaring gives **much more weight to larger companies**:
-
-| Market Share | Contribution to HHI |
-|--------------|---------------------|
-| 10% (0.10)   | 0.01                |
-| 20% (0.20)   | 0.04 (4× more)      |
-| 40% (0.40)   | 0.16 (16× more!)    |
-
-This makes HHI very sensitive to market dominance.
-
-### Examples
-
-**Equal Competition (10 companies @ 10% each):**
-- HHI = 10 × (0.10)² = 0.10 ✓ Competitive!
-
-**One Dominant Player (70%, plus smaller competitors):**
-- HHI ≈ (0.70)² + others = 0.49+ ⚠️ Highly concentrated!
-        ")
+            div(
+                class = "container-fluid p-4",
+                
+                # What is HHI section
+                div(
+                    class = "mb-5",
+                    h2("What is HHI?", class = "mb-3"),
+                    p("The Herfindahl-Hirschman Index (HHI) measures how concentrated a market is.", 
+                      class = "lead"),
+                    
+                    h4("How it Works", class = "mt-4 mb-3"),
+                    tags$ol(
+                        tags$li("Calculate each company's market share (as a decimal, like 0.25 for 25%)"),
+                        tags$li("Square each market share"),
+                        tags$li("Add them all together")
+                    ),
+                    
+                    h4("The Scale (0 to 1)", class = "mt-4 mb-3"),
+                    div(
+                        class = "alert alert-success",
+                        strong("0.00 to 0.15"), " = 🟢 Competitive Market (many companies, good for consumers)"
+                    ),
+                    div(
+                        class = "alert alert-warning",
+                        strong("0.15 to 0.25"), " = 🟡 Moderately Concentrated (a few larger players emerging)"
+                    ),
+                    div(
+                        class = "alert alert-danger",
+                        strong("0.25 to 1.00"), " = 🔴 Highly Concentrated (one or two companies dominate)"
+                    ),
+                    
+                    h4("Why It Matters", class = "mt-4 mb-3"),
+                    p("Government regulators use HHI to:"),
+                    tags$ul(
+                        tags$li("Evaluate merger proposals"),
+                        tags$li("Protect consumers from monopolies"),
+                        tags$li("Ensure fair competition")
+                    ),
+                    div(
+                        class = "alert alert-info mt-3",
+                        icon("info-circle"), " ",
+                        strong("Important:"), " A market with HHI above 0.25 typically raises antitrust concerns."
+                    )
+                ),
+                
+                hr(class = "my-5"),
+                
+                # Understanding the Math section
+                div(
+                    h2("Understanding the Math", class = "mb-3"),
+                    
+                    h4("Why Square Market Shares?", class = "mt-4 mb-3"),
+                    p("Squaring gives ", strong("much more weight to larger companies"), ":"),
+                    
+                    div(
+                        class = "table-responsive",
+                        tags$table(
+                            class = "table table-striped table-hover",
+                            tags$thead(
+                                tags$tr(
+                                    tags$th("Market Share"),
+                                    tags$th("Contribution to HHI")
+                                )
+                            ),
+                            tags$tbody(
+                                tags$tr(
+                                    tags$td("10% (0.10)"),
+                                    tags$td("0.01")
+                                ),
+                                tags$tr(
+                                    tags$td("20% (0.20)"),
+                                    tags$td("0.04 (4× more)")
+                                ),
+                                tags$tr(
+                                    tags$td("40% (0.40)"),
+                                    tags$td("0.16 (16× more!)")
+                                )
+                            )
+                        )
+                    ),
+                    
+                    p(class = "mt-3", "This makes HHI very sensitive to market dominance."),
+                    
+                    h4("Examples", class = "mt-5 mb-3"),
+                    
+                    div(
+                        class = "card mb-3",
+                        div(
+                            class = "card-body bg-light",
+                            h5(class = "card-title", "Equal Competition (10 companies @ 10% each)"),
+                            p(class = "card-text mb-0", 
+                              "HHI = 10 × (0.10)² = ", 
+                              strong("0.10"), 
+                              " ✓ Competitive!")
+                        )
+                    ),
+                    
+                    div(
+                        class = "card",
+                        div(
+                            class = "card-body bg-light",
+                            h5(class = "card-title", "One Dominant Player (70%, plus smaller competitors)"),
+                            p(class = "card-text mb-0", 
+                              "HHI ≈ (0.70)² + others = ", 
+                              strong("0.49+"), 
+                              " ⚠️ Highly concentrated!")
+                        )
+                    )
+                )
             )
         )
     )
