@@ -1,3 +1,418 @@
+HEAD
+make,model,vehicle_type,powertrain,coef
+nissan,leaf,car,bev,6606.818360659356
+bmw,i3,car,bev,6277.353368960759
+tesla,model 3,car,bev,6523.122967469785
+tesla,model s,car,bev,9176.724604508285
+kia,soul,car,bev,5688.784561891039
+volkswagen,e-golf,car,bev,6362.257192205591
+fiat,500e,car,bev,5408.45467026963
+chevrolet,bolt ev,car,bev,3583.772664556052
+ford,focus,car,bev,5790.102078408102
+chevrolet,spark,car,bev,5320.998905315091
+porsche,taycan,car,bev,6262.82021775442
+smart,fortwo,car,bev,3628.8936090733678
+hyundai,ioniq,car,bev,9160.394812000535
+mitsubishi,i-miev,car,bev,2582.8669249557197
+mini,hardtop 2 door,car,bev,5663.846639551718
+ford,fusion,car,cv,12076.978650225981
+ford,mustang,car,cv,8183.8257335799035
+ford,focus,car,cv,10363.395903292707
+ford,taurus,car,cv,12070.376741414248
+honda,civic hatchback,car,cv,11066.906371295134
+honda,civic,car,cv,11761.397578512353
+honda,accord,car,cv,12651.642171505706
+hyundai,accent,car,cv,9548.832012494713
+hyundai,elantra,car,cv,10664.678709001759
+hyundai,sonata,car,cv,12122.538607442108
+kia,optima,car,cv,11506.591677483852
+kia,soul,car,cv,10243.459178244815
+lexus,es,car,cv,10717.833469436644
+lexus,is,car,cv,11056.227556562939
+lincoln,mkz,car,cv,11179.550791724554
+mazda,mazda6,car,cv,11926.82706785193
+mercedes-benz,c-class,car,cv,10406.12418735329
+honda,fit,car,cv,10626.814687834718
+kia,forte,car,cv,11603.5087170909
+mazda,mazda3,car,cv,11327.82778268268
+mercedes-benz,c-class sedan,car,cv,9214.120941568077
+mercedes-benz,e-class,car,cv,9764.383555254819
+mercedes-benz,s-class,car,cv,8808.91473705213
+mini,cooper,car,cv,9106.662842143918
+nissan,altima,car,cv,11361.134678041448
+nissan,maxima,car,cv,11497.055148266956
+nissan,altima sedan,car,cv,10113.902901534537
+nissan,sentra,car,cv,11028.6169635003
+nissan,versa sedan,car,cv,9853.181272931202
+nissan,versa note,car,cv,9602.888861608997
+subaru,impreza,car,cv,11758.582384282474
+subaru,legacy,car,cv,12322.236930301882
+subaru,outback,car,cv,13056.797338661076
+toyota,avalon,car,cv,10213.497996137747
+toyota,camry,car,cv,11227.202411905706
+toyota,corolla,car,cv,10368.690386509461
+volkswagen,jetta,car,cv,11721.581272614929
+volkswagen,passat,car,cv,11487.489965507693
+dodge,charger,car,cv,12286.437385008776
+chevrolet,malibu,car,cv,10370.419315110299
+bmw,5 series,car,cv,11041.52539805947
+chevrolet,cruze,car,cv,12256.306017838657
+chrysler,300,car,cv,10696.578337005303
+bmw,3 series,car,cv,10507.115393839033
+chrysler,200,car,cv,11514.762016518462
+chevrolet,sonic,car,cv,10127.9986042674
+acura,tlx,car,cv,11927.639905512116
+chevrolet,camaro,car,cv,8485.612661592699
+dodge,challenger,car,cv,9210.359260330128
+infiniti,q50,car,cv,10762.799306980314
+audi,a4,car,cv,11513.866098937378
+bmw,4 series,car,cv,9116.131494525305
+chevrolet,corvette,car,cv,3812.7337050712163
+chevrolet,impala,car,cv,10484.229969133155
+dodge,avenger,car,cv,11160.385614195733
+dodge,dart,car,cv,10678.412256903643
+ford,fiesta,car,cv,9476.479660346136
+acura,tl,car,cv,11761.003879241973
+kia,k5,car,cv,9455.045466837355
+nissan,rogue,cuv,cv,11434.48403623968
+nissan,pathfinder,cuv,cv,12517.278520040098
+subaru,forester,cuv,cv,12454.266320662871
+subaru,xv crosstrek,cuv,cv,12337.059436385769
+toyota,highlander,cuv,cv,12639.104701689857
+toyota,rav4,cuv,cv,10995.420021244667
+volkswagen,atlas,cuv,cv,11818.373569124178
+volkswagen,tiguan,cuv,cv,10994.68926605704
+volvo,xc90,cuv,cv,12612.907855208327
+volvo,xc60,cuv,cv,12056.608193261913
+buick,encore,cuv,cv,10852.202429314666
+toyota,venza,cuv,cv,12240.346895851833
+bmw,x1,cuv,cv,10572.821104472045
+nissan,rogue sport,cuv,cv,9863.937841429564
+acura,mdx,cuv,cv,13159.194479158805
+acura,rdx,cuv,cv,12071.888033017189
+audi,q7,cuv,cv,12346.890635903384
+audi,q3,cuv,cv,10505.294350822856
+audi,q5,cuv,cv,11651.90085507738
+bmw,x3,cuv,cv,10754.083195966103
+buick,enclave,cuv,cv,13343.729438234697
+cadillac,srx,cuv,cv,10819.455857774263
+chevrolet,equinox,cuv,cv,12921.544814083834
+chevrolet,traverse,cuv,cv,14211.758619494667
+chevrolet,trax,cuv,cv,11941.842734433665
+dodge,journey,cuv,cv,13108.729116146265
+ford,escape,cuv,cv,12771.195497408466
+gmc,acadia,cuv,cv,14035.786855347329
+honda,cr-v,cuv,cv,12319.357006307951
+honda,pilot,cuv,cv,14349.437729898164
+hyundai,tucson,cuv,cv,11099.85415708482
+hyundai,santa fe,cuv,cv,12175.714176615964
+jeep,compass,cuv,cv,11379.890798050308
+kia,sorento,cuv,cv,12846.627304221334
+kia,sportage,cuv,cv,11219.758872875294
+jeep,patriot,cuv,cv,11508.911260047103
+jeep,renegade,cuv,cv,11269.603648804672
+lexus,rx,cuv,cv,11220.527707849313
+lincoln,mkc,cuv,cv,11315.820503758505
+lincoln,mkx,cuv,cv,12002.460109143252
+mazda,cx-9,cuv,cv,12497.166810435181
+mercedes-benz,glk-class,cuv,cv,10696.326169832468
+mercedes-benz,gle-class,cuv,cv,10065.884922473226
+mitsubishi,outlander,cuv,cv,11366.793983531656
+mitsubishi,outlander sport,cuv,cv,10236.10175522147
+nissan,murano,cuv,cv,11567.196833071035
+subaru,crosstrek,cuv,cv,11803.871636365848
+cadillac,xt5,cuv,cv,9788.412271176068
+gmc,terrain,cuv,cv,12690.292575169224
+mercedes-benz,glc-class,cuv,cv,8886.943161996984
+mini,countryman,cuv,cv,9944.194455690485
+bmw,x5,cuv,cv,11404.717354802067
+buick,envision,cuv,cv,10810.516296800644
+chevrolet,blazer,cuv,cv,10263.81539019472
+subaru,ascent,cuv,cv,13237.510362159503
+ford,edge,cuv,cv,11219.967337218777
+kia,telluride,cuv,cv,16111.973996588811
+lexus,nx,cuv,cv,10377.918275948441
+mazda,cx-5,cuv,cv,11076.522792102603
+mercedes-benz,gl-class,cuv,cv,11309.282772140334
+mercedes-benz,gla-class,cuv,cv,9675.326534059937
+mercedes-benz,glc,cuv,cv,10296.601019904636
+mercedes-benz,m-class,cuv,cv,10906.91473120256
+porsche,macan,cuv,cv,9499.893512360608
+honda,hr-v,cuv,cv,10481.575490277304
+hyundai,palisade,cuv,cv,14320.729509020593
+hyundai,kona,cuv,cv,9433.203230360388
+infiniti,qx60,cuv,cv,12605.834000694742
+mercedes-benz,gle,cuv,cv,9955.70418412433
+nissan,kicks,cuv,cv,10879.18256123268
+nissan,juke,cuv,cv,11037.346030420002
+nissan,rogue select,cuv,cv,12697.931349080722
+toyota,c-hr,cuv,cv,12899.346431010446
+buick,encore gx,cuv,cv,7179.316684671053
+ford,ecosport,cuv,cv,9000.938455340329
+honda,odyssey,minivan,cv,13970.664279480261
+toyota,sienna,minivan,cv,12213.008767875483
+chrysler,pacifica,minivan,cv,10288.45368215905
+kia,sedona,minivan,cv,12352.25237548775
+mazda,mazda5,minivan,cv,9807.932193036624
+nissan,quest,minivan,cv,11582.867035501833
+ford,transit connect,minivan,cv,11870.43781891605
+chrysler,town & country,minivan,cv,13093.40116527036
+nissan,cube,minivan,cv,10343.532624564403
+kia,carnival,minivan,cv,10238.82912498668
+dodge,grand caravan,minivan,cv,10685.25120448019
+fiat,500l,minivan,cv,9529.699796980745
+volkswagen,routan,minivan,cv,9882.759299156563
+chrysler,pt cruiser,minivan,cv,14068.16148978928
+mercedes-benz,r-class,minivan,cv,7826.610239940332
+chevrolet,hhr,minivan,cv,7977.279955125512
+chrysler,voyager,minivan,cv,9994.735962942956
+kia,rondo,minivan,cv,1712.8105925243194
+mazda,cx-30,cuv,cv,8266.803160490275
+ford,f-150,pickup,cv,14495.176715686695
+gmc,canyon,pickup,cv,11517.527267927944
+gmc,sierra 1500,pickup,cv,13732.85810894147
+gmc,sierra 1500 denali,pickup,cv,13227.979316948127
+honda,ridgeline,pickup,cv,12554.897818078962
+nissan,frontier,pickup,cv,11713.92801703329
+nissan,titan,pickup,cv,12933.7097240197
+ram,ram 2500 pickup,pickup,cv,13882.008714129683
+ram,ram 1500 pickup,pickup,cv,13716.53379810252
+ram,ram 1500 classic,pickup,cv,13924.869205092458
+toyota,tacoma,pickup,cv,12236.540785157942
+toyota,tundra,pickup,cv,13375.89276134368
+chevrolet,colorado,pickup,cv,12005.69882751298
+chevrolet,silverado 1500 ld,pickup,cv,15059.245231241093
+chevrolet,silverado 1500,pickup,cv,13833.431860966753
+chevrolet,silverado 2500hd,pickup,cv,14027.833344206152
+dodge,ram 1500 pickup,pickup,cv,13631.728711487183
+ford,f-250 super duty,pickup,cv,14355.918460829591
+ford,ranger,pickup,cv,10467.624182745667
+jeep,gladiator,pickup,cv,10965.943905945509
+ford,f-350 super duty,pickup,cv,13377.893572327881
+gmc,sierra 2500hd,pickup,cv,13283.724331944606
+dodge,ram 2500 pickup,pickup,cv,10041.025161106892
+ford,explorer sport trac,pickup,cv,-6485.480220559046
+jeep,cherokee,suv,cv,12307.780383522926
+jeep,grand cherokee,suv,cv,13198.132330525597
+jeep,wrangler,suv,cv,9704.054386205837
+jeep,wrangler unlimited,suv,cv,10666.30575085705
+toyota,4runner,suv,cv,12248.291775455982
+cadillac,escalade,suv,cv,11898.89008975757
+cadillac,escalade esv,suv,cv,13115.022970027498
+chevrolet,tahoe,suv,cv,13744.089209010048
+chevrolet,suburban,suv,cv,14448.088013735272
+dodge,durango,suv,cv,13787.113999128187
+ford,expedition,suv,cv,14085.542367266484
+ford,explorer,suv,cv,13941.009839018981
+gmc,yukon,suv,cv,13469.58308667516
+gmc,yukon xl,suv,cv,14551.643805386084
+nissan,armada,suv,cv,12105.38299926064
+toyota,sequoia,suv,cv,14241.50264224265
+lexus,lx,suv,cv,11753.29811953323
+lincoln,navigator,suv,cv,14188.238498202318
+honda,passport,suv,cv,10345.152613888471
+jeep,wrangler jk unlimited,suv,cv,9949.35092597011
+land rover,range rover sport,suv,cv,10325.997940681867
+mercedes-benz,g-class,suv,cv,7805.798646336792
+infiniti,qx80,suv,cv,12445.911722732859
+jeep,all-new wrangler unlimited,suv,cv,11136.702532296142
+infiniti,qx,suv,cv,12325.85985574713
+nissan,xterra,suv,cv,11025.24509023465
+bmw,x7,suv,cv,9512.61839880753
+land rover,range rover,suv,cv,10153.90872142695
+lexus,gx,suv,cv,12419.326028136305
+toyota,fj cruiser,suv,cv,10324.313406369447
+jeep,liberty,suv,cv,8944.024616033856
+land rover,lr4,suv,cv,11263.440188919576
+hummer,h3,suv,cv,-9797.025650258813
+land rover,defender,suv,cv,8966.439973617042
+mercury,mountaineer,suv,cv,21996.421474547333
+jeep,commander,suv,cv,-3784.00925007161
+ram,ram 1500,pickup,cv,12588.785025922742
+chevrolet,silverado 1500 limited,pickup,cv,14970.01787381882
+hyundai,santa cruz,pickup,cv,12599.56220211076
+ford,maverick,pickup,cv,14572.11537842975
+jeep,grand cherokee l,suv,cv,10020.76110360142
+jeep,wrangler 4-door,suv,cv,12757.116061706216
+ford,bronco 4-door,suv,cv,9775.912514503269
+jeep,grand cherokee wk,suv,cv,15310.629293399517
+jeep,wagoneer,suv,cv,24234.451927394664
+ford,bronco sport,cuv,cv,12851.958467167626
+chevrolet,trailblazer,cuv,cv,9628.518056006757
+volkswagen,taos,cuv,cv,13350.435456846191
+bmw,3 series,car,diesel,13015.096344732172
+volkswagen,jetta,car,diesel,8883.775644693953
+volkswagen,passat,car,diesel,8308.466718947508
+volkswagen,jetta sportwagen,car,diesel,8757.11386725513
+volkswagen,beetle,car,diesel,7449.225282886296
+bmw,5 series,car,diesel,11775.89308194841
+volkswagen,golf,car,diesel,7915.301318544192
+jaguar,xf,car,diesel,10425.492745383577
+audi,a6,car,diesel,10951.369053099148
+chevrolet,cruze,car,diesel,13251.111984725565
+audi,a3 sedan,car,diesel,10297.716355862636
+volkswagen,golf sportwagen,car,diesel,11372.746909859998
+mercedes-benz,e-class,car,diesel,10711.283686267781
+jaguar,xe,car,diesel,10789.691434350301
+audi,a3,car,diesel,8713.549660453822
+audi,a8,car,diesel,13056.306135181389
+audi,a7,car,diesel,10434.496311096622
+mercedes-benz,s-class,car,diesel,10876.271633033182
+mercedes-benz,gl-class,cuv,diesel,11525.880147089469
+gmc,terrain,cuv,diesel,13089.285321878642
+chevrolet,equinox,cuv,diesel,12493.169008366196
+mercedes-benz,gle-class,cuv,diesel,11405.605676046825
+mercedes-benz,m-class,cuv,diesel,10464.058892820505
+mercedes-benz,r-class,cuv,diesel,9212.814896271784
+audi,q5,cuv,diesel,12788.294334149812
+porsche,cayenne,cuv,diesel,12465.518351759052
+bmw,x5,cuv,diesel,12775.663140951001
+land rover,range rover velar,cuv,diesel,10417.294103341606
+jaguar,f-pace,cuv,diesel,10751.036282976112
+audi,q7,cuv,diesel,11833.489292756287
+mercedes-benz,glk-class,cuv,diesel,9122.567817566834
+mazda,cx-30,cuv,diesel,17591.28012934521
+land rover,discovery,cuv,diesel,11713.370955951337
+bmw,x3,cuv,diesel,11155.225217234733
+mazda,cx-5,cuv,diesel,11212.410526697025
+mercedes-benz,r-class,minivan,diesel,5161.047562549101
+ford,transit,minivan,diesel,1548.9332407583333
+chevrolet,silverado 2500hd,pickup,diesel,14560.93506295988
+chevrolet,colorado,pickup,diesel,13254.578284029954
+chevrolet,silverado 3500hd,pickup,diesel,14454.07744302827
+ford,f-250 super duty,pickup,diesel,15611.12845699154
+ford,f-350 super duty,pickup,diesel,14595.612794447576
+gmc,sierra 3500 denali hd,pickup,diesel,13162.49549811125
+gmc,sierra 2500 denali hd,pickup,diesel,13916.512149124219
+ram,ram 3500 pickup,pickup,diesel,14183.964830922792
+ram,ram 2500 pickup,pickup,diesel,14604.564625069022
+dodge,ram 2500 pickup,pickup,diesel,13806.370355888197
+ford,f-450 super duty,pickup,diesel,13659.891433676019
+ram,ram 1500 pickup,pickup,diesel,15037.741411812602
+nissan,titan xd,pickup,diesel,12348.079753249258
+gmc,sierra 2500hd,pickup,diesel,14978.524344984688
+gmc,canyon,pickup,diesel,12626.34916841873
+gmc,sierra 3500hd,pickup,diesel,15234.929273025
+ford,f-150,pickup,diesel,15546.434538202479
+gmc,sierra 1500 denali,pickup,diesel,15973.820760798551
+gmc,sierra 3500,pickup,diesel,11848.839259914086
+gmc,sierra 1500,pickup,diesel,17453.524217885362
+chevrolet,silverado 3500,pickup,diesel,12964.615103829883
+chevrolet,silverado 1500,pickup,diesel,17572.948298692845
+dodge,ram 3500 pickup,pickup,diesel,14594.859178924784
+ford,crown victoria,car,cv,2913.1600814452354
+buick,lacrosse,car,cv,9930.24511827745
+audi,a5,car,cv,9911.694680939132
+audi,allroad,car,cv,11283.804666287577
+buick,lucerne,car,cv,3224.76023502601
+cadillac,cts sedan,car,cv,9503.484401908136
+buick,verano,car,cv,9048.125139212689
+cadillac,ats,car,cv,9776.00208277742
+audi,a5 cabriolet,car,cv,7277.085308952397
+lincoln,town car,car,cv,8294.540613601386
+buick,regal,car,cv,10040.461467332534
+chevrolet,impala limited,car,cv,9158.754095075537
+audi,a5 coupe,car,cv,9956.306354344219
+mercury,grand marquis,car,cv,688.6513159787479
+ford,flex,cuv,cv,13035.472642648585
+chevrolet,captiva sport,cuv,cv,9414.937518300158
+chevrolet,avalanche,pickup,cv,10015.203336696211
+gmc,sierra denali,pickup,cv,11326.241615121273
+chevrolet,silverado 3500hd,pickup,cv,12130.260329591676
+ford,fusion hybrid,car,hev,11512.68618200479
+bmw,3 series,car,hev,9161.89912413743
+ford,fusion,car,hev,7689.2022230957955
+buick,lacrosse,car,hev,10848.92979574142
+chevrolet,malibu,car,hev,12359.463066625958
+honda,accord,car,hev,12772.644936872433
+honda,cr-z,car,hev,11264.814888942892
+honda,civic,car,hev,13063.126526473268
+honda,clarity,car,hev,10414.033938352582
+honda,insight,car,hev,10281.858739421106
+hyundai,sonata hybrid,car,hev,11724.325192510583
+infiniti,q50,car,hev,12457.375260204082
+kia,optima,car,hev,13350.645201998692
+hyundai,ioniq,car,hev,12849.8624103458
+lexus,es hybrid,car,hev,10024.55453717312
+lincoln,mkz,car,hev,11586.273836660937
+lexus,ct,car,hev,11987.301769871698
+lexus,hs,car,hev,10244.095857610944
+porsche,panamera,car,hev,8332.409830874267
+toyota,avalon,car,hev,11346.987271500811
+toyota,camry,car,hev,11348.2390752023
+toyota,prius v,car,hev,13429.464499288117
+toyota,prius c,car,hev,11423.81781650652
+mercedes-benz,e-class,car,hev,8972.463374078383
+toyota,prius,car,hev,11550.990920847189
+volkswagen,jetta,car,hev,10309.279678883599
+bmw,i3,car,hev,7515.88119374875
+bmw,5 series,car,hev,9426.099082131213
+toyota,corolla,car,hev,20186.02390308296
+toyota,rav4,cuv,hev,11810.280035687734
+subaru,xv crosstrek,cuv,hev,11119.667688410302
+subaru,crosstrek,cuv,hev,12102.988060533426
+lexus,rx,cuv,hev,12280.579486881583
+porsche,cayenne,cuv,hev,10387.628711337997
+volvo,xc60,cuv,hev,8610.557190905292
+ford,escape,cuv,hev,12324.286481146532
+lexus,ux hybrid,cuv,hev,8959.167806963167
+toyota,highlander,cuv,hev,12966.752275002182
+kia,niro,cuv,hev,13107.336667119975
+lexus,nx hybrid,cuv,hev,9598.179701077695
+lexus,rx hybrid,cuv,hev,10242.519015729229
+infiniti,qx60,cuv,hev,12203.647493897526
+audi,q5,cuv,hev,10596.101283862447
+honda,cr-v,cuv,hev,12251.39813861811
+volvo,xc90,cuv,hev,10141.973090905525
+nissan,rogue,cuv,hev,12291.355409722388
+nissan,pathfinder hybrid,cuv,hev,12295.606186761226
+toyota,venza,cuv,hev,8642.703986196362
+bmw,x3,cuv,hev,7485.437576122008
+kia,sportage,cuv,hev,7067.807043433219
+kia,sorento,cuv,hev,12717.693951191335
+mitsubishi,outlander,cuv,hev,11724.819733974593
+ford,c-max,minivan,hev,11457.225554325576
+toyota,prius v,minivan,hev,12108.184197400944
+chrysler,pacifica hybrid,minivan,hev,8647.473190641265
+mercury,mariner,cuv,hev,25551.047105188205
+hyundai,ioniq 6,car,bev,10626.511126731744
+bmw,i4,car,bev,6315.057295014867
+polestar,2,car,bev,7821.670840893458
+mercedes-benz,eqe,car,bev,15404.102379324675
+bmw,i7,car,bev,9637.804791642246
+tesla,model x,cuv,bev,9209.80183931188
+kia,niro,cuv,bev,4000.7301189285554
+toyota,rav4,cuv,bev,6470.552268156296
+audi,e-tron sportback,cuv,bev,7633.160312500799
+audi,e-tron,cuv,bev,7091.580681641101
+jaguar,i-pace,cuv,bev,7532.631919882397
+tesla,model y,cuv,bev,9051.897201331976
+hyundai,kona ev,cuv,bev,6875.416401206855
+kia,ev6,cuv,bev,12781.768109605251
+chevrolet,bolt euv,cuv,bev,8910.593146369445
+volkswagen,id.4,cuv,bev,10434.79723152167
+ford,mustang mach-e,cuv,bev,11494.271671672584
+mercedes-benz,eqs,cuv,bev,7946.172000509005
+nissan,ariya,cuv,bev,7914.090626151356
+mercedes-benz,eqb,cuv,bev,9259.227226530453
+mercedes-benz,eqe suv,cuv,bev,15825.22313279705
+volvo,xc40,cuv,bev,8995.195369032586
+volvo,c40,cuv,bev,8204.998823639218
+toyota,bz4x,cuv,bev,10646.415567092428
+hyundai,ioniq 5,cuv,bev,13645.590686108775
+lexus,rz,cuv,bev,2721.2048380605515
+audi,q4 e-tron,cuv,bev,4543.543700954422
+cadillac,lyriq,cuv,bev,15659.817440021638
+subaru,solterra,cuv,bev,17497.625440424625
+bmw,ix,cuv,bev,7627.618116452819
+ford,f-150 lightning,pickup,bev,10254.483005542676
+rivian,r1t,pickup,bev,8821.65723786712
+gmc,hummer ev,pickup,bev,5879.110499447572
+rivian,r1s,suv,bev,6019.565264061377
+bentley,bentayga,suv,bev,8486.775356944163
+dodge,caravan,minivan,cv,13808.486672398963
+dodge,ram pickup,pickup,cv,18424.492982311614
+
 age_years,mileage_predicted,make,model,vehicle_type,powertrain,coef
 2,11251.602984847152,nissan,leaf,car,bev,6606.818360659288
 2.5,14555.012165176797,nissan,leaf,car,bev,6606.818360659288
@@ -7094,3 +7509,4 @@ age_years,mileage_predicted,make,model,vehicle_type,powertrain,coef
 8,72633.96304040146,ford,transit,minivan,diesel,1548.9332407582274
 8.5,73408.42966078057,ford,transit,minivan,diesel,1548.9332407582274
 9,74182.89628115969,ford,transit,minivan,diesel,1548.9332407582274
+11dc662 (Updated first three metrics)
