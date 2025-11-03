@@ -4,7 +4,6 @@
 # Load required libraries
 library(shiny)
 library(bslib)
-library(ggplot2)
 library(plotly)
 library(DT)
 library(dplyr)
@@ -130,9 +129,7 @@ ui <- page_navbar(
 
     h5("Dataset Filters", style = "font-weight: bold; color: #2c3e50;"),
 
-    conditionalPanel(
-      condition = "input.tabs != 'Make & Model'",
-      checkboxGroupInput("fuel_types",
+    checkboxGroupInput("fuel_types",
                         "Powertrain Type:",
                         choices = list("BEV" = "bev",
                                      "Conventional" = "cv",
@@ -142,7 +139,7 @@ ui <- page_navbar(
                                      "PHEV" = "phev"),
                         selected = c("bev", "cv", "hev")),
 
-      checkboxGroupInput("vehicle_types",
+    checkboxGroupInput("vehicle_types",
                         "Vehicle Types:",
                         choices = list("Car" = "car",
                                      "CUV" = "cuv",
@@ -151,8 +148,7 @@ ui <- page_navbar(
                                      "SUV" = "suv"),
                         selected = c("car", "cuv", "minivan", "pickup", "suv")),
 
-      hr()
-    ),
+    hr(),
 
     h5("Metric-Specific Controls", style = "font-weight: bold; color: #2c3e50;"),
 
@@ -207,39 +203,19 @@ ui <- page_navbar(
 
       sliderInput("depreciation_age_range",
                  "Age Range for Analysis (Years):",
-                 min = 1, max = 8, value = c(1, 8), step = 0.5),
-
-      radioButtons("depreciation_type", "Analysis Type:",
-                  choices = list("Retention Rate" = "retention",
-                               "Depreciation Rate" = "depreciation",
-                               "Both" = "both"),
-                  selected = "both")
+                 min = 1, max = 8, value = c(1, 8), step = 0.5)
     ),
 
     conditionalPanel(
-      condition = "input.tabs == 'Make & Model'",
-      h6("Make & Model Controls", style = "font-weight: 600; color: #34495e;"),
+      condition = "input.tabs == 'Market Concentration'",
+      h6("Market Concentration Controls", style = "font-weight: 600; color: #34495e;"),
 
-      selectInput("make_model_metric",
-                 "Metric:",
-                 choices = list("Cumulative Mileage" = "mileage",
-                              "Depreciation" = "depreciation"),
-                 selected = "mileage"),
-
-      selectInput("make_model_make",
-                 "Select Make:",
-                 choices = NULL),
-
-      selectInput("make_model_model",
-                 "Select Model:",
-                 choices = NULL,
-                 multiple = TRUE),
-
-      hr(style = "border-color: #ddd; margin: 10px 0;"),
-
-      sliderInput("make_model_age_range",
-                 "Age Range (Years):",
-                 min = 1, max = 9, value = c(2, 8), step = 0.5)
+      radioButtons("hhi_metric",
+                  "HHI Metric:",
+                  choices = list("Brand (Make)" = "make",
+                               "Vehicle Type" = "type",
+                               "Price Bin" = "price"),
+                  selected = "make")
     )
   ),
   
@@ -269,7 +245,14 @@ ui <- page_navbar(
         "Vehicle Mileage Trends by Age",
         class = "text-center"
       ),
-      plotlyOutput("mileage_plot", height = "700px")
+      plotlyOutput("mileage_plot", height = "800px")
+    ),
+    card(
+      card_header(
+        "Mileage Summary Table",
+        class = "text-center"
+      ),
+      DT::dataTableOutput("mileage_table")
     )
   ),
   
@@ -286,22 +269,14 @@ ui <- page_navbar(
         "Vehicle Retention Rates by Age",
         class = "text-center"
       ),
-      plotlyOutput("retention_plot", height = "700px")
-    )
-  ),
-
-  # Make & Model Analysis Page
-  nav_panel(
-    title = "Make & Model",
-    value = "Make & Model",
-    icon = icon("car"),
+      plotlyOutput("retention_plot", height = "850px")
+    ),
     card(
-      full_screen = TRUE,
       card_header(
-        textOutput("make_model_title"),
+        "Depreciation Summary Table",
         class = "text-center"
       ),
-      plotlyOutput("make_model_plot", height = "700px")
+      DT::dataTableOutput("retention_table")
     )
   ),
 
@@ -310,23 +285,33 @@ ui <- page_navbar(
     title = "Market Concentration",
     value = "Market Concentration",
     icon = icon("chart-bar"),
-    layout_columns(
-      col_widths = 12,
-      card(
-        full_screen = TRUE,
-        card_header(
-          "Market Share by Vehicle Type and Fuel",
-          class = "text-center"
+
+    # HHI Explanation Card
+    card(
+      card_header("About the Herfindahl-Hirschman Index (HHI)", class = "text-center"),
+      div(
+        style = "padding: 10px 15px; font-size: 13px; line-height: 1.4;",
+        div(
+          style = "margin-bottom: 8px;",
+          strong("What is HHI?"), " The Herfindahl-Hirschman Index (HHI) is a measure of market concentration. It ranges from 0 to 1, where:"
         ),
-        plotlyOutput("comparison_plot", height = "500px")
+        tags$ul(
+          style = "margin: 8px 0; padding-left: 25px;",
+          tags$li(strong("0 (or close to 0):"), " Indicates perfect competition with many small players"),
+          tags$li(strong("Closer to 1:"), " Indicates high concentration, dominated by few players")
+        ),
+        div(
+          style = "margin-top: 8px;",
+          "The box plots below show HHI distributions by powertrain type, comparing 2018 vs 2024 data. Use the metric controls in the sidebar to switch between Brand, Vehicle Type, and Price Bin views."
+        )
       )
     ),
-    layout_columns(
-      col_widths = 12,
-      card(
-        card_header("Market Concentration Metrics"),
-        DT::dataTableOutput("metrics_table")
-      )
+
+    # HHI Visualization
+    card(
+      full_screen = TRUE,
+      card_header(textOutput("hhi_plot_title", inline = TRUE), class = "text-center"),
+      plotlyOutput("hhi_plot", height = "600px")
     )
   ),
   
@@ -477,13 +462,13 @@ server <- function(input, output, session) {
     }
   })
 
-  # Load mileage data
+  # Load mileage data (prediction-based)
   mileage_data <- reactive({
     # Try multiple potential data paths
     data_paths <- c(
-      "data/quantiles_miles.parquet",
-      "../data/quantiles_miles.parquet",
-      file.path(dirname(getwd()), "data", "quantiles_miles.parquet")
+      "data/mileage_powertrain_type.csv",
+      "../data/mileage_powertrain_type.csv",
+      file.path(dirname(getwd()), "data", "mileage_powertrain_type.csv")
     )
 
     data_path <- NULL
@@ -495,24 +480,25 @@ server <- function(input, output, session) {
     }
 
     if (is.null(data_path)) {
-      stop("Cannot find quantiles_miles.parquet file")
+      stop("Cannot find mileage_powertrain_type.csv file")
     }
 
-    quantiles_miles <- read_parquet(data_path)
+    mileage_pred <- read.csv(data_path)
 
-    data <- quantiles_miles %>%
-      filter(powertrain != "all", vehicle_type != "all")
+    # Ensure proper column names and types
+    data <- mileage_pred %>%
+      filter(!is.na(powertrain), !is.na(vehicle_type))
 
     return(data)
   })
   
-  # Load retention rate data
+  # Load retention rate data (prediction-based)
   retention_data <- reactive({
     # Try multiple potential data paths
     data_paths <- c(
-      "data/quantiles_rr.parquet",
-      "../data/quantiles_rr.parquet",
-      file.path(dirname(getwd()), "data", "quantiles_rr.parquet")
+      "data/depreciation_powertrain_type.csv",
+      "../data/depreciation_powertrain_type.csv",
+      file.path(dirname(getwd()), "data", "depreciation_powertrain_type.csv")
     )
 
     data_path <- NULL
@@ -524,17 +510,85 @@ server <- function(input, output, session) {
     }
 
     if (is.null(data_path)) {
-      stop("Cannot find quantiles_rr.parquet file")
+      stop("Cannot find depreciation_powertrain_type.csv file")
     }
 
-    quantiles_rr <- read_parquet(data_path)
+    depreciation_pred <- read.csv(data_path)
 
-    data <- quantiles_rr %>%
-      filter(powertrain != "all", vehicle_type != "all")
+    # Ensure proper column names and types
+    data <- depreciation_pred %>%
+      filter(!is.na(powertrain), !is.na(vehicle_type))
 
     return(data)
   })
-  
+
+  # Load HHI (Market Concentration) data
+  hhi_make_data <- reactive({
+    data_paths <- c(
+      "data/hhi_make.csv",
+      "../data/hhi_make.csv",
+      file.path(dirname(getwd()), "data", "hhi_make.csv")
+    )
+
+    data_path <- NULL
+    for (path in data_paths) {
+      if (file.exists(path)) {
+        data_path <- path
+        break
+      }
+    }
+
+    if (is.null(data_path)) {
+      stop("Cannot find hhi_make.csv file")
+    }
+
+    read.csv(data_path)
+  })
+
+  hhi_type_data <- reactive({
+    data_paths <- c(
+      "data/hhi_type.csv",
+      "../data/hhi_type.csv",
+      file.path(dirname(getwd()), "data", "hhi_type.csv")
+    )
+
+    data_path <- NULL
+    for (path in data_paths) {
+      if (file.exists(path)) {
+        data_path <- path
+        break
+      }
+    }
+
+    if (is.null(data_path)) {
+      stop("Cannot find hhi_type.csv file")
+    }
+
+    read.csv(data_path)
+  })
+
+  hhi_price_data <- reactive({
+    data_paths <- c(
+      "data/hhi_price.csv",
+      "../data/hhi_price.csv",
+      file.path(dirname(getwd()), "data", "hhi_price.csv")
+    )
+
+    data_path <- NULL
+    for (path in data_paths) {
+      if (file.exists(path)) {
+        data_path <- path
+        break
+      }
+    }
+
+    if (is.null(data_path)) {
+      stop("Cannot find hhi_price.csv file")
+    }
+
+    read.csv(data_path)
+  })
+
   # Filtered VMT data based on user inputs
   filtered_data <- reactive({
     data <- sample_data()
@@ -625,6 +679,152 @@ server <- function(input, output, session) {
     data %>%
       filter(powertrain %in% fuel_types,
              vehicle_type %in% vehicle_types)
+  })
+
+  mileage_plot_context <- reactive({
+    data <- filtered_mileage_data()
+
+    if(is.null(data) || nrow(data) == 0) {
+      return(list(status = "empty", message = "No data matches current filters"))
+    }
+
+    required_cols <- c("age_years", "mileage_predicted", "coef")
+    missing_cols <- setdiff(required_cols, names(data))
+    if(length(missing_cols) > 0) {
+      return(list(status = "error", message = "Mileage data missing required columns"))
+    }
+
+    # Filter for age > 2 years
+    data <- data %>%
+      filter(age_years > 2)
+
+    age_min <- if(!is.null(input$age_range)) max(2, input$age_range[1]) else 2
+    age_max <- if(!is.null(input$age_range)) input$age_range[2] else 8
+    show_bands <- FALSE  # No confidence bands in prediction data
+    selected_category <- if(!is.null(input$comparison_category)) input$comparison_category else "powertrain"
+
+    data <- data %>%
+      filter(
+        age_years >= age_min,
+        age_years <= age_max,
+        !is.na(mileage_predicted)
+      )
+
+    if(nrow(data) == 0) {
+      return(list(status = "empty", message = "No data matches current filters"))
+    }
+
+    if(selected_category == "powertrain") {
+      aggregated <- data %>%
+        group_by(powertrain, vehicle_type, age_years) %>%
+        summarise(
+          mileage_predicted = mean(mileage_predicted, na.rm = TRUE),
+          coef = mean(coef, na.rm = TRUE),
+          .groups = "drop"
+        )
+      categories <- sort(unique(aggregated$powertrain))
+      category_var <- "powertrain"
+      category_label <- "Powertrain"
+      secondary <- sort(unique(aggregated$vehicle_type))
+    } else {
+      aggregated <- data %>%
+        group_by(vehicle_type, powertrain, age_years) %>%
+        summarise(
+          mileage_predicted = mean(mileage_predicted, na.rm = TRUE),
+          coef = mean(coef, na.rm = TRUE),
+          .groups = "drop"
+        )
+      categories <- sort(unique(aggregated$vehicle_type))
+      category_var <- "vehicle_type"
+      category_label <- "Vehicle Type"
+      secondary <- sort(unique(aggregated$powertrain))
+    }
+
+    if(nrow(aggregated) == 0 || length(categories) == 0 || length(secondary) == 0) {
+      return(list(status = "empty", message = "No data matches current filters"))
+    }
+
+    list(
+      status = "ok",
+      aggregated = aggregated,
+      category_var = category_var,
+      category_label = category_label,
+      categories = categories,
+      secondary_cats = secondary,
+      age_min = age_min,
+      age_max = age_max,
+      show_bands = show_bands,
+      selected_category = selected_category
+    )
+  })
+
+  retention_plot_context <- reactive({
+    data <- filtered_retention_data()
+
+    if(is.null(data) || nrow(data) == 0) {
+      return(list(status = "empty", message = "No data matches current filters"))
+    }
+
+    required_cols <- c("age_years", "rr_predicted")
+    missing_cols <- setdiff(required_cols, names(data))
+    if(length(missing_cols) > 0) {
+      return(list(status = "error", message = "Retention data missing required columns"))
+    }
+
+    age_min <- if(!is.null(input$depreciation_age_range)) input$depreciation_age_range[1] else 1
+    age_max <- if(!is.null(input$depreciation_age_range)) input$depreciation_age_range[2] else 8
+    selected_category <- if(!is.null(input$depreciation_category)) input$depreciation_category else "powertrain"
+
+    data <- data %>%
+      filter(
+        age_years >= age_min,
+        age_years <= age_max,
+        !is.na(rr_predicted)
+      )
+
+    if(nrow(data) == 0) {
+      return(list(status = "empty", message = "No data matches current filters"))
+    }
+
+    if(selected_category == "powertrain") {
+      aggregated <- data %>%
+        group_by(powertrain, vehicle_type, age_years) %>%
+        summarise(
+          rr_predicted = mean(rr_predicted, na.rm = TRUE),
+          .groups = "drop"
+        )
+      categories <- sort(unique(aggregated$powertrain))
+      category_var <- "powertrain"
+      category_label <- "Powertrain"
+      secondary <- sort(unique(aggregated$vehicle_type))
+    } else {
+      aggregated <- data %>%
+        group_by(vehicle_type, powertrain, age_years) %>%
+        summarise(
+          rr_predicted = mean(rr_predicted, na.rm = TRUE),
+          .groups = "drop"
+        )
+      categories <- sort(unique(aggregated$vehicle_type))
+      category_var <- "vehicle_type"
+      category_label <- "Vehicle Type"
+      secondary <- sort(unique(aggregated$powertrain))
+    }
+
+    if(nrow(aggregated) == 0 || length(categories) == 0 || length(secondary) == 0) {
+      return(list(status = "empty", message = "No data matches current filters"))
+    }
+
+    list(
+      status = "ok",
+      aggregated = aggregated,
+      category_var = category_var,
+      category_label = category_label,
+      categories = categories,
+      secondary_cats = secondary,
+      age_min = age_min,
+      age_max = age_max,
+      selected_category = selected_category
+    )
   })
   
   # Main Plot (CDF/PDF/Histogram) - Pure Plotly with Subplots
@@ -1090,636 +1290,603 @@ output$cdf_plot <- renderPlotly({
   })
   
   # Cumulative VMT by Age - Category-based comparison
+  smooth_series <- function(df, y_col, age_seq, span = 0.65) {
+    df <- df %>% arrange(age_years)
+    if (length(unique(df$age_years)) < 3 || nrow(df) < 3) {
+      approx_res <- approx(x = df$age_years, y = df[[y_col]], xout = age_seq, rule = 2, ties = mean)
+      return(tibble::tibble(age_years = approx_res$x, value = approx_res$y))
+    }
+    fit <- tryCatch(
+      loess(stats::as.formula(paste(y_col, "~ age_years")), data = df, span = span, degree = 2),
+      error = function(e) NULL
+    )
+    if (is.null(fit)) {
+      approx_res <- approx(x = df$age_years, y = df[[y_col]], xout = age_seq, rule = 2, ties = mean)
+      return(tibble::tibble(age_years = approx_res$x, value = approx_res$y))
+    }
+    preds <- predict(fit, newdata = data.frame(age_years = age_seq))
+    if (all(is.na(preds))) {
+      approx_res <- approx(x = df$age_years, y = df[[y_col]], xout = age_seq, rule = 2, ties = mean)
+      preds <- approx_res$y
+    }
+    tibble::tibble(age_years = age_seq, value = preds)
+  }
+
+  compute_linear_slope <- function(df, y_col) {
+    if (nrow(df) < 2 || length(unique(df$age_years)) < 2) {
+      return(NA_real_)
+    }
+    fit <- tryCatch(
+      lm(stats::as.formula(paste(y_col, "~ age_years")), data = df),
+      error = function(e) NULL
+    )
+    if (is.null(fit)) {
+      return(NA_real_)
+    }
+    slope <- coef(fit)["age_years"]
+    unname(ifelse(is.null(slope), NA_real_, slope))
+  }
+
+  approx_value <- function(df, y_col, x_value) {
+    if (is.null(x_value) || is.na(x_value) || nrow(df) == 0) {
+      return(NA_real_)
+    }
+    approx(x = df$age_years, y = df[[y_col]], xout = x_value, rule = 2, ties = mean)$y
+  }
+
+  build_mileage_summary <- function(context) {
+    aggregated <- context$aggregated
+    if (nrow(aggregated) == 0) {
+      return(dplyr::tibble())
+    }
+    group_cols <- if (context$category_var == "powertrain") c("powertrain", "vehicle_type") else c("vehicle_type", "powertrain")
+
+    aggregated %>%
+      group_by(across(all_of(group_cols))) %>%
+      arrange(age_years, .by_group = TRUE) %>%
+      group_modify(~ {
+        slope <- compute_linear_slope(.x, "mileage_predicted")
+        start_val <- approx_value(.x, "mileage_predicted", context$age_min)
+        end_val <- approx_value(.x, "mileage_predicted", context$age_max)
+        coef_val <- mean(.x$coef, na.rm = TRUE)
+        tibble::tibble(
+          `Predicted Miles (Age Start)` = round(start_val, 0),
+          `Predicted Miles (Age End)` = round(end_val, 0),
+          `Annual Mileage Change` = round(slope, 1),
+          `Coefficient (Annual Rate)` = round(coef_val, 1)
+        )
+      }) %>%
+      ungroup() %>%
+      distinct()
+  }
+
+  build_retention_summary <- function(context) {
+    aggregated <- context$aggregated
+    if (nrow(aggregated) == 0) {
+      return(dplyr::tibble())
+    }
+    group_cols <- if (context$category_var == "powertrain") c("powertrain", "vehicle_type") else c("vehicle_type", "powertrain")
+
+    aggregated %>%
+      group_by(across(all_of(group_cols))) %>%
+      arrange(age_years, .by_group = TRUE) %>%
+      group_modify(~ {
+        slope <- compute_linear_slope(.x, "rr_predicted")
+        start_val <- approx_value(.x, "rr_predicted", context$age_min)
+        end_val <- approx_value(.x, "rr_predicted", context$age_max)
+        tibble::tibble(
+          `Predicted Retention (Age Start)` = scales::percent(start_val, accuracy = 0.1),
+          `Predicted Retention (Age End)` = scales::percent(end_val, accuracy = 0.1),
+          `Annual Change (pp)` = round(slope * 100, 2)
+        )
+      }) %>%
+      ungroup() %>%
+      distinct()
+  }
+
   output$mileage_plot <- renderPlotly({
-    tryCatch({
-      # Load and process mileage data
-      data <- mileage_data() %>%
-        mutate(age_years = age_months / 12) %>%
-        filter(age_years > 2)
+    context <- mileage_plot_context()
 
-      if(nrow(data) == 0) {
-        return(plot_ly() %>%
-                 add_annotations(text = "No mileage data available",
-                               xref = "paper", yref = "paper",
-                               x = 0.5, y = 0.5, showarrow = FALSE))
-      }
-
-      # Get age range from input
-      age_min <- if(!is.null(input$age_range)) max(2, input$age_range[1]) else 2
-      age_max <- if(!is.null(input$age_range)) input$age_range[2] else 8
-
-      # Get category selection (default to powertrain)
-      selected_category <- if(!is.null(input$comparison_category)) {
-        input$comparison_category
-      } else {
-        "powertrain"
-      }
-
-      # Apply filters
-      plot_data <- data %>%
-        filter(
-          age_years >= age_min,
-          age_years <= age_max,
-          !is.na(miles50), !is.na(miles25), !is.na(miles75)
-        )
-
-      # Apply user filters with mapping for BEV subtypes
-      if(!is.null(input$fuel_types) && length(input$fuel_types) > 0) {
-        # Map BEV subtypes to main BEV category for mileage data
-        selected_powertrains <- input$fuel_types
-        # If user selected bev_tesla or bev_non_tesla, also include "bev"
-        if(any(c("bev_tesla", "bev_non_tesla") %in% selected_powertrains)) {
-          selected_powertrains <- c(selected_powertrains, "bev")
-        }
-        # Filter using only powertrains that exist in mileage data
-        available_powertrains <- c("bev", "cv", "diesel", "hev", "phev")
-        selected_powertrains <- intersect(selected_powertrains, available_powertrains)
-
-        if(length(selected_powertrains) > 0) {
-          plot_data <- plot_data %>% filter(powertrain %in% selected_powertrains)
-        } else {
-          # No valid powertrains selected, return empty data
-          plot_data <- plot_data %>% filter(FALSE)
-        }
-      }
-      if(!is.null(input$vehicle_types) && length(input$vehicle_types) > 0) {
-        plot_data <- plot_data %>% filter(vehicle_type %in% input$vehicle_types)
-      }
-
-      if(nrow(plot_data) == 0) {
-        return(plot_ly() %>%
-                 add_annotations(text = "No data matches current filters",
-                               xref = "paper", yref = "paper",
-                               x = 0.5, y = 0.5, showarrow = FALSE))
-      }
-
-      # Aggregate based on selected category (keeping BOTH dimensions)
-      if(selected_category == "powertrain") {
-        # Group by powertrain AND vehicle_type, then aggregate within each combination
-        plot_data_agg <- plot_data %>%
-          group_by(powertrain, vehicle_type, age_years) %>%
-          summarise(
-            miles25 = mean(miles25, na.rm = TRUE),
-            miles50 = mean(miles50, na.rm = TRUE),
-            miles75 = mean(miles75, na.rm = TRUE),
-            .groups = "drop"
+    if (is.null(context) || context$status != "ok") {
+      message <- if (!is.null(context$message)) context$message else "No mileage data available"
+      return(
+        plot_ly() %>%
+          add_annotations(
+            text = message,
+            xref = "paper", yref = "paper",
+            x = 0.5, y = 0.5,
+            showarrow = FALSE
           )
-        categories <- sort(unique(plot_data_agg$powertrain))
-        category_var <- "powertrain"
-        category_label <- "Powertrain"
-        secondary_var <- "vehicle_type"
-      } else {
-        # Group by vehicle_type AND powertrain, then aggregate within each combination
-        plot_data_agg <- plot_data %>%
-          group_by(vehicle_type, powertrain, age_years) %>%
-          summarise(
-            miles25 = mean(miles25, na.rm = TRUE),
-            miles50 = mean(miles50, na.rm = TRUE),
-            miles75 = mean(miles75, na.rm = TRUE),
-            .groups = "drop"
+      )
+    }
+
+    aggregated <- context$aggregated
+    categories <- context$categories
+    secondary_cats <- context$secondary_cats
+    category_var <- context$category_var
+    category_label <- context$category_label
+    age_min <- context$age_min
+    age_max <- context$age_max
+    show_bands <- context$show_bands
+
+    if (length(categories) == 0 || length(secondary_cats) == 0) {
+      return(
+        plot_ly() %>%
+          add_annotations(
+            text = "No data matches current filters",
+            xref = "paper", yref = "paper",
+            x = 0.5, y = 0.5,
+            showarrow = FALSE
           )
-        categories <- sort(unique(plot_data_agg$vehicle_type))
-        category_var <- "vehicle_type"
-        category_label <- "Vehicle Type"
-        secondary_var <- "powertrain"
-      }
+      )
+    }
 
-      show_bands <- if(!is.null(input$show_confidence_bands)) {
-        input$show_confidence_bands
+    colors <- viridisLite::viridis(length(secondary_cats))
+    color_map <- setNames(colors, secondary_cats)
+    secondary_label <- if (category_var == "powertrain") "Vehicle Type" else "Powertrain"
+
+    fig <- plot_ly()
+
+    n_cols <- min(3, length(categories))
+    n_rows <- ceiling(length(categories) / n_cols)
+    h_gap <- 0.05
+    v_gap <- 0.08
+    cell_width <- (1 - (n_cols - 1) * h_gap) / n_cols
+    cell_height <- (1 - (n_rows - 1) * v_gap) / n_rows
+
+    xaxes <- list()
+    yaxes <- list()
+    annotations <- list()
+
+    for (idx in seq_along(categories)) {
+      cat_value <- categories[idx]
+
+      cat_data <- if (category_var == "powertrain") {
+        aggregated %>% filter(powertrain == cat_value)
       } else {
-        TRUE
+        aggregated %>% filter(vehicle_type == cat_value)
       }
 
-      # Get secondary categories (vehicle types or powertrains to show as lines)
-      if(category_var == "powertrain") {
-        secondary_cats <- sort(unique(plot_data_agg$vehicle_type))
-      } else {
-        secondary_cats <- sort(unique(plot_data_agg$powertrain))
-      }
+      row <- ceiling(idx / n_cols)
+      col <- ((idx - 1) %% n_cols) + 1
 
-      # Create color palette for secondary categories (lines within each panel)
-      colors <- viridisLite::viridis(length(secondary_cats))
-      color_map <- setNames(colors, secondary_cats)
+      x_start <- (col - 1) * (cell_width + h_gap)
+      x_end <- x_start + cell_width
+      y_start <- 1 - row * (cell_height + v_gap)
+      y_end <- y_start + cell_height
 
-      # Create single figure with subplots (one per category)
-      fig <- plot_ly()
+      xaxis_name <- if (idx == 1) "x" else paste0("x", idx)
+      yaxis_name <- if (idx == 1) "y" else paste0("y", idx)
 
-      # Calculate grid dimensions (arrange in 3 columns)
-      n_cols <- min(3, length(categories))
-      n_rows <- ceiling(length(categories) / n_cols)
-
-      # Margins between subplots
-      h_gap <- 0.05
-      v_gap <- 0.08
-
-      # Calculate cell dimensions
-      cell_width <- (1 - (n_cols - 1) * h_gap) / n_cols
-      cell_height <- (1 - (n_rows - 1) * v_gap) / n_rows
-
-      # Build axis layout lists
-      xaxes <- list()
-      yaxes <- list()
-      annotations <- list()
-
-      for(idx in seq_along(categories)) {
-        cat <- categories[idx]
-
-        # Get data for this category
-        if(category_var == "powertrain") {
-          cat_data <- plot_data_agg %>% filter(powertrain == cat)
+      if (nrow(cat_data) > 0) {
+        available_secondary <- if (category_var == "powertrain") {
+          sort(unique(cat_data$vehicle_type))
         } else {
-          cat_data <- plot_data_agg %>% filter(vehicle_type == cat)
+          sort(unique(cat_data$powertrain))
         }
 
-        # Calculate grid position
-        row <- ceiling(idx / n_cols)
-        col <- ((idx - 1) %% n_cols) + 1
-
-        # Calculate domain positions
-        x_start <- (col - 1) * (cell_width + h_gap)
-        x_end <- x_start + cell_width
-        y_start <- 1 - row * (cell_height + v_gap)
-        y_end <- y_start + cell_height
-
-        # Create unique axis names
-        xaxis_name <- if(idx == 1) "x" else paste0("x", idx)
-        yaxis_name <- if(idx == 1) "y" else paste0("y", idx)
-
-        if(nrow(cat_data) > 0) {
-          # Plot each secondary category as a separate line
-          for(sec_cat in secondary_cats) {
-            # Filter data for this secondary category
-            if(category_var == "powertrain") {
-              sec_data <- cat_data %>% filter(vehicle_type == sec_cat)
-            } else {
-              sec_data <- cat_data %>% filter(powertrain == sec_cat)
-            }
-
-            if(nrow(sec_data) > 0) {
-              # Add ribbon trace
-              if(show_bands) {
-                fig <- fig %>%
-                  add_trace(
-                    data = sec_data,
-                    x = ~age_years,
-                    y = ~miles25,
-                    type = "scatter",
-                    mode = "lines",
-                    line = list(color = "transparent"),
-                    showlegend = FALSE,
-                    xaxis = xaxis_name,
-                    yaxis = yaxis_name,
-                    hoverinfo = "none"
-                  ) %>%
-                  add_trace(
-                    data = sec_data,
-                    x = ~age_years,
-                    y = ~miles75,
-                    type = "scatter",
-                    mode = "lines",
-                    fill = "tonexty",
-                    fillcolor = paste0(substr(color_map[sec_cat], 1, 7), "40"),
-                    line = list(color = "transparent"),
-                    showlegend = FALSE,
-                    xaxis = xaxis_name,
-                    yaxis = yaxis_name,
-                    hoverinfo = "none"
-                  )
-              }
-
-              # Add median line
-              fig <- fig %>%
-                add_trace(
-                  data = sec_data,
-                  x = ~age_years,
-                  y = ~miles50,
-                  type = "scatter",
-                  mode = "lines",
-                  line = list(color = color_map[sec_cat], width = 2.5),
-                  name = toupper(sec_cat),
-                  showlegend = (idx == 1),
-                  legendgroup = sec_cat,
-                  xaxis = xaxis_name,
-                  yaxis = yaxis_name,
-                  hovertemplate = paste0(
-                    "<b>", toupper(cat), " - ", toupper(sec_cat), "</b><br>",
-                    "Age: %{x:.1f} years<br>",
-                    "Mileage: %{y:,.0f} miles<br>",
-                    "<extra></extra>"
-                  )
-                )
-            }
-          }
-        }
-
-        # Configure axes
-        xaxis_config <- list(
-          domain = c(x_start, x_end),
-          range = c(age_min, age_max),
-          showticklabels = TRUE,
-          title = if(row == n_rows) {
-            list(text = "Vehicle Age (years)", font = list(size = 10))
+        for (sec_cat in available_secondary) {
+          sec_data <- if (category_var == "powertrain") {
+            cat_data %>% filter(vehicle_type == sec_cat)
           } else {
-            ""
-          }
-        )
+            cat_data %>% filter(powertrain == sec_cat)
+          } %>% arrange(age_years)
 
-        yaxis_config <- list(
-          domain = c(y_start, y_end),
-          anchor = xaxis_name,
-          showticklabels = TRUE,
-          title = if(col == 1) {
-            list(text = "Cumulative Miles", font = list(size = 10))
-          } else {
-            ""
+          if (nrow(sec_data) == 0) {
+            next
           }
-        )
 
-        if(idx == 1) {
-          xaxes[["xaxis"]] <- xaxis_config
-          yaxes[["yaxis"]] <- yaxis_config
-        } else {
-          xaxes[[paste0("xaxis", idx)]] <- xaxis_config
-          yaxes[[paste0("yaxis", idx)]] <- yaxis_config
+          min_age <- max(age_min, min(sec_data$age_years))
+          max_age <- min(age_max, max(sec_data$age_years))
+          if (min_age >= max_age) {
+            next
+          }
+          age_seq <- seq(min_age, max_age, length.out = max(80, length(sec_data$age_years) * 5))
+          age_seq <- unique(age_seq)
+
+          # Use prediction data (single line, no confidence bands)
+          mileage_smooth <- smooth_series(sec_data, "mileage_predicted", age_seq) %>%
+            rename(mileage_predicted = value)
+
+          if (nrow(mileage_smooth) == 0) {
+            next
+          }
+
+          fig <- fig %>%
+            add_trace(
+              data = mileage_smooth,
+              x = ~age_years,
+              y = ~mileage_predicted,
+              type = "scatter",
+              mode = "lines",
+              line = list(color = color_map[sec_cat], width = 2.5, shape = "spline"),
+              name = toupper(sec_cat),
+              showlegend = (idx == 1),
+              legendgroup = sec_cat,
+              xaxis = xaxis_name,
+              yaxis = yaxis_name,
+              hovertemplate = paste0(
+                "<b>", toupper(cat_value), " - ", toupper(sec_cat), "</b><br>",
+                "Age: %{x:.1f} years<br>",
+                "Mileage: %{y:,.0f} miles<br>",
+                "<extra></extra>"
+              )
+            )
         }
-
-        # Add panel title (category name)
-        annotations[[length(annotations) + 1]] <- list(
-          x = x_start + cell_width / 2,
-          y = y_end + 0.02,
-          text = paste0("<b>", toupper(cat), "</b>"),
-          xref = "paper",
-          yref = "paper",
-          xanchor = "center",
-          yanchor = "bottom",
-          showarrow = FALSE,
-          font = list(size = 11)
-        )
       }
 
-      # Apply layout
-      layout_args <- c(
-        list(
-          title = list(
-            text = paste0("Vehicle Mileage Trends by ", category_label),
-            font = list(size = 16)
-          ),
-          annotations = annotations,
-          showlegend = TRUE,
-          legend = list(
-            orientation = "h",
-            x = 0.5,
-            xanchor = "center",
-            y = -0.15,
-            title = list(text = paste0("<b>",
-              if(category_var == "powertrain") "Vehicle Type" else "Powertrain",
-              "</b>"))
-          ),
-          hovermode = "closest",
-          margin = list(t = 80, b = 100, l = 70, r = 30)
-        ),
-        xaxes,
-        yaxes
+      xaxis_config <- list(
+        domain = c(x_start, x_end),
+        range = c(age_min, age_max),
+        showticklabels = TRUE,
+        title = if (row == n_rows) {
+          list(text = "Vehicle Age (years)", font = list(size = 10))
+        } else {
+          ""
+        }
       )
 
-      fig <- do.call(layout, c(list(fig), layout_args))
+      yaxis_config <- list(
+        domain = c(y_start, y_end),
+        anchor = xaxis_name,
+        showticklabels = TRUE,
+        title = if (col == 1) {
+          list(text = "Cumulative Miles", font = list(size = 10))
+        } else {
+          ""
+        }
+      )
 
-      fig <- fig %>%
-        config(
-          displayModeBar = TRUE,
-          modeBarButtonsToRemove = c("lasso2d", "select2d"),
-          toImageButtonOptions = list(format = "png", filename = "mileage_plot")
-        )
+      if (idx == 1) {
+        xaxes[["xaxis"]] <- xaxis_config
+        yaxes[["yaxis"]] <- yaxis_config
+      } else {
+        xaxes[[paste0("xaxis", idx)]] <- xaxis_config
+        yaxes[[paste0("yaxis", idx)]] <- yaxis_config
+      }
 
-      return(fig)
+      annotations[[length(annotations) + 1]] <- list(
+        x = x_start + cell_width / 2,
+        y = y_end + 0.02,
+        text = paste0("<b>", toupper(cat_value), "</b>"),
+        xref = "paper",
+        yref = "paper",
+        xanchor = "center",
+        yanchor = "bottom",
+        showarrow = FALSE,
+        font = list(size = 11)
+      )
+    }
 
-    }, error = function(e) {
-      return(plot_ly() %>%
-               add_annotations(text = paste("Error:", e$message),
-                             xref = "paper", yref = "paper",
-                             x = 0.5, y = 0.5, showarrow = FALSE))
-    })
+    layout_args <- c(
+      list(
+        title = list(
+          text = paste0("Vehicle Mileage Trends by ", category_label),
+          font = list(size = 16)
+        ),
+        annotations = annotations,
+        showlegend = TRUE,
+        legend = list(
+          orientation = "h",
+          x = 0.5,
+          xanchor = "center",
+          y = -0.15,
+          title = list(text = paste0("<b>", secondary_label, "</b>"))
+        ),
+        hovermode = "closest",
+        margin = list(t = 80, b = 100, l = 70, r = 30)
+      ),
+      xaxes,
+      yaxes
+    )
+
+    fig <- do.call(layout, c(list(fig), layout_args))
+
+    fig %>%
+      config(
+        displayModeBar = TRUE,
+        modeBarButtonsToRemove = c("lasso2d", "select2d"),
+        toImageButtonOptions = list(format = "png", filename = "mileage_plot")
+      )
   })
-
 
   # Vehicle Retention Rates by Age - Category-based comparison
   output$retention_plot <- renderPlotly({
-    tryCatch({
-      # Load retention data
-      data_paths <- c(
-        "data/quantiles_rr.parquet",
-        "../data/quantiles_rr.parquet",
-        file.path(dirname(getwd()), "data", "quantiles_rr.parquet")
+    context <- retention_plot_context()
+
+    if (is.null(context) || context$status != "ok") {
+      message <- if (!is.null(context$message)) context$message else "No retention data available"
+      return(
+        plot_ly() %>%
+          add_annotations(
+            text = message,
+            xref = "paper", yref = "paper",
+            x = 0.5, y = 0.5,
+            showarrow = FALSE
+          )
       )
+    }
 
-      data_path_rr <- NULL
-      for (path in data_paths) {
-        if (file.exists(path)) {
-          data_path_rr <- path
-          break
-        }
-      }
+    aggregated <- context$aggregated
+    categories <- context$categories
+    secondary_cats <- context$secondary_cats
+    category_var <- context$category_var
+    category_label <- context$category_label
+    age_min <- context$age_min
+    age_max <- context$age_max
 
-      if (is.null(data_path_rr)) {
-        stop("Cannot find quantiles_rr.parquet file")
-      }
+    if (length(categories) == 0 || length(secondary_cats) == 0) {
+      return(
+        plot_ly() %>%
+          add_annotations(
+            text = "No data matches current filters",
+            xref = "paper", yref = "paper",
+            x = 0.5, y = 0.5,
+            showarrow = FALSE
+          )
+      )
+    }
 
-      # Get category selection (default to powertrain)
-      selected_category <- if(!is.null(input$depreciation_category)) {
-        input$depreciation_category
+    colors <- viridisLite::viridis(length(secondary_cats))
+    color_map <- setNames(colors, secondary_cats)
+    secondary_label <- if (category_var == "powertrain") "Vehicle Type" else "Powertrain"
+
+    fig <- plot_ly()
+
+    n_cols <- min(3, length(categories))
+    n_rows <- ceiling(length(categories) / n_cols)
+    h_gap <- 0.03
+    v_gap <- 0.10
+    panel_width <- (1 - (n_cols - 1) * h_gap) / n_cols
+    panel_height <- (1 - (n_rows - 1) * v_gap) / n_rows
+
+    xaxes <- list()
+    yaxes <- list()
+    annotations <- list()
+
+    for (idx in seq_along(categories)) {
+      cat_value <- categories[idx]
+
+      cat_data <- if (category_var == "powertrain") {
+        aggregated %>% filter(powertrain == cat_value)
       } else {
-        "powertrain"
+        aggregated %>% filter(vehicle_type == cat_value)
       }
 
-      # Load main retention data
-      quantiles <- read_parquet(data_path_rr) %>%
-        mutate(age_years = age_months / 12) %>%
-        filter(between(age_years, 1, 8))
+      row <- ceiling(idx / n_cols)
+      col <- ((idx - 1) %% n_cols) + 1
 
-      # Apply user filters with mapping for BEV subtypes
-      if(!is.null(input$fuel_types) && length(input$fuel_types) > 0) {
-        # Map BEV subtypes to main BEV category for retention data
-        selected_powertrains <- input$fuel_types
-        # If user selected bev_tesla or bev_non_tesla, also include "bev"
-        if(any(c("bev_tesla", "bev_non_tesla") %in% selected_powertrains)) {
-          selected_powertrains <- c(selected_powertrains, "bev")
-        }
-        # Filter using only powertrains that exist in retention data
-        available_powertrains <- c("bev", "cv", "hev", "phev")
-        selected_powertrains <- intersect(selected_powertrains, available_powertrains)
+      x_start <- (col - 1) * (panel_width + h_gap)
+      x_end <- x_start + panel_width
+      y_start <- 1 - row * (panel_height + v_gap)
+      y_end <- y_start + panel_height
 
-        if(length(selected_powertrains) > 0) {
-          quantiles <- quantiles %>% filter(powertrain %in% selected_powertrains)
+      xaxis_name <- if (idx == 1) "x" else paste0("x", idx)
+      yaxis_name <- if (idx == 1) "y" else paste0("y", idx)
+
+      if (nrow(cat_data) > 0) {
+        available_secondary <- if (category_var == "powertrain") {
+          sort(unique(cat_data$vehicle_type))
         } else {
-          # No valid powertrains selected, return empty data
-          quantiles <- quantiles %>% filter(FALSE)
-        }
-      }
-      if(!is.null(input$vehicle_types) && length(input$vehicle_types) > 0) {
-        quantiles <- quantiles %>% filter(vehicle_type %in% input$vehicle_types)
-      }
-
-      # Aggregate based on selected category (keeping BOTH dimensions)
-      if(selected_category == "powertrain") {
-        # Group by powertrain AND vehicle_type
-        quantiles_agg <- quantiles %>%
-          group_by(powertrain, vehicle_type, age_years) %>%
-          summarise(
-            rr25 = mean(rr25, na.rm = TRUE),
-            rr50 = mean(rr50, na.rm = TRUE),
-            rr75 = mean(rr75, na.rm = TRUE),
-            .groups = "drop"
-          ) %>%
-          filter(!is.na(rr25), !is.na(rr50), !is.na(rr75))
-        categories <- sort(unique(quantiles_agg$powertrain))
-        category_var <- "powertrain"
-        category_label <- "Powertrain"
-        secondary_var <- "vehicle_type"
-      } else {
-        # Group by vehicle_type AND powertrain
-        quantiles_agg <- quantiles %>%
-          group_by(vehicle_type, powertrain, age_years) %>%
-          summarise(
-            rr25 = mean(rr25, na.rm = TRUE),
-            rr50 = mean(rr50, na.rm = TRUE),
-            rr75 = mean(rr75, na.rm = TRUE),
-            .groups = "drop"
-          ) %>%
-          filter(!is.na(rr25), !is.na(rr50), !is.na(rr75))
-        categories <- sort(unique(quantiles_agg$vehicle_type))
-        category_var <- "vehicle_type"
-        category_label <- "Vehicle Type"
-        secondary_var <- "powertrain"
-      }
-
-      if(nrow(quantiles_agg) == 0) {
-        return(plot_ly() %>%
-                 add_annotations(text = "No retention data available",
-                               xref = "paper", yref = "paper",
-                               x = 0.5, y = 0.5, showarrow = FALSE))
-      }
-
-      # Get secondary categories (vehicle types or powertrains to show as lines)
-      if(category_var == "powertrain") {
-        secondary_cats <- sort(unique(quantiles_agg$vehicle_type))
-      } else {
-        secondary_cats <- sort(unique(quantiles_agg$powertrain))
-      }
-
-      # Create color palette for secondary categories (lines within each panel)
-      colors <- viridisLite::viridis(length(secondary_cats))
-      color_map <- setNames(colors, secondary_cats)
-
-      # Create figure with subplots (one per category)
-      fig <- plot_ly()
-
-      # Calculate panel dimensions (arrange in 3 columns)
-      n_cols <- min(3, length(categories))
-      n_rows <- ceiling(length(categories) / n_cols)
-
-      # Margins between subplots
-      h_gap <- 0.03
-      v_gap <- 0.10
-
-      # Calculate cell dimensions
-      panel_width <- (1 - (n_cols - 1) * h_gap) / n_cols
-      panel_height <- (1 - (n_rows - 1) * v_gap) / n_rows
-
-      xaxes <- list()
-      yaxes <- list()
-      annotations <- list()
-
-      for(idx in seq_along(categories)) {
-        cat <- categories[idx]
-
-        # Get data for this category
-        if(category_var == "powertrain") {
-          cat_data <- quantiles_agg %>% filter(powertrain == cat)
-        } else {
-          cat_data <- quantiles_agg %>% filter(vehicle_type == cat)
+          sort(unique(cat_data$powertrain))
         }
 
-        # Calculate grid position
-        row <- ceiling(idx / n_cols)
-        col <- ((idx - 1) %% n_cols) + 1
+        for (sec_cat in available_secondary) {
+          sec_data <- if (category_var == "powertrain") {
+            cat_data %>% filter(vehicle_type == sec_cat)
+          } else {
+            cat_data %>% filter(powertrain == sec_cat)
+          } %>% arrange(age_years)
 
-        # Calculate domain positions
-        x_start <- (col - 1) * (panel_width + h_gap)
-        x_end <- x_start + panel_width
-        y_start <- 1 - row * (panel_height + v_gap)
-        y_end <- y_start + panel_height
-
-        # Create unique axis names
-        xaxis_name <- if(idx == 1) "x" else paste0("x", idx)
-        yaxis_name <- if(idx == 1) "y" else paste0("y", idx)
-
-        if(nrow(cat_data) > 0) {
-          # Plot each secondary category as a separate line
-          for(sec_cat in secondary_cats) {
-            # Filter data for this secondary category
-            if(category_var == "powertrain") {
-              sec_data <- cat_data %>% filter(vehicle_type == sec_cat)
-            } else {
-              sec_data <- cat_data %>% filter(powertrain == sec_cat)
-            }
-
-            if(nrow(sec_data) > 0) {
-              # Add ribbon (lower bound)
-              fig <- fig %>%
-                add_trace(
-                  data = sec_data,
-                  x = ~age_years,
-                  y = ~rr25,
-                  type = "scatter",
-                  mode = "lines",
-                  line = list(color = "transparent"),
-                  showlegend = FALSE,
-                  xaxis = xaxis_name,
-                  yaxis = yaxis_name,
-                  hoverinfo = "none"
-                )
-
-              # Add ribbon (upper bound)
-              fig <- fig %>%
-                add_trace(
-                  data = sec_data,
-                  x = ~age_years,
-                  y = ~rr75,
-                  type = "scatter",
-                  mode = "lines",
-                  fill = "tonexty",
-                  fillcolor = paste0(substr(color_map[sec_cat], 1, 7), "40"),
-                  line = list(color = "transparent"),
-                  showlegend = FALSE,
-                  xaxis = xaxis_name,
-                  yaxis = yaxis_name,
-                  hoverinfo = "none"
-                )
-
-              # Add median line
-              fig <- fig %>%
-                add_trace(
-                  data = sec_data,
-                  x = ~age_years,
-                  y = ~rr50,
-                  type = "scatter",
-                  mode = "lines",
-                  line = list(color = color_map[sec_cat], width = 2.5),
-                  name = toupper(sec_cat),
-                  showlegend = (idx == 1),
-                  legendgroup = sec_cat,
-                  xaxis = xaxis_name,
-                  yaxis = yaxis_name,
-                  hovertemplate = paste0(
-                    "<b>", toupper(cat), " - ", toupper(sec_cat), "</b><br>",
-                    "Age: %{x:.1f} years<br>",
-                    "Retention Rate: %{y:.1%}<br>",
-                    "<extra></extra>"
-                  )
-                )
-            }
+          if (nrow(sec_data) == 0) {
+            next
           }
+
+          min_age <- max(age_min, min(sec_data$age_years))
+          max_age <- min(age_max, max(sec_data$age_years))
+          if (min_age >= max_age) {
+            next
+          }
+          age_seq <- seq(min_age, max_age, length.out = max(80, length(sec_data$age_years) * 5))
+          age_seq <- unique(age_seq)
+
+          # Use prediction data (single line, no confidence bands)
+          rr_smooth <- smooth_series(sec_data, "rr_predicted", age_seq, span = 0.6) %>%
+            rename(rr_predicted = value)
+
+          if (nrow(rr_smooth) == 0) {
+            next
+          }
+
+          fig <- fig %>%
+            add_trace(
+              data = rr_smooth,
+              x = ~age_years,
+              y = ~rr_predicted,
+              type = "scatter",
+              mode = "lines",
+              line = list(color = color_map[sec_cat], width = 2.5, shape = "spline"),
+              name = toupper(sec_cat),
+              showlegend = (idx == 1),
+              legendgroup = sec_cat,
+              xaxis = xaxis_name,
+              yaxis = yaxis_name,
+              hovertemplate = paste0(
+                "<b>", toupper(cat_value), " - ", toupper(sec_cat), "</b><br>",
+                "Age: %{x:.1f} years<br>",
+                "Retention Rate: %{y:.1%}<br>",
+                "<extra></extra>"
+              )
+            )
         }
-
-        # Configure axes
-        xaxis_config <- list(
-          domain = c(x_start, x_end),
-          range = c(1, 8),
-          title = if(row == n_rows) {
-            list(text = "Vehicle age (years)", font = list(size = 10))
-          } else {
-            ""
-          },
-          tickmode = "linear",
-          tick0 = 1,
-          dtick = 1,
-          showticklabels = TRUE
-        )
-
-        yaxis_config <- list(
-          domain = c(y_start, y_end),
-          anchor = xaxis_name,
-          range = c(0, 1),
-          tickformat = ".0%",
-          title = if(col == 1) {
-            list(text = "Retention rate", font = list(size = 10))
-          } else {
-            ""
-          },
-          showticklabels = TRUE
-        )
-
-        if(idx == 1) {
-          xaxes[["xaxis"]] <- xaxis_config
-          yaxes[["yaxis"]] <- yaxis_config
-        } else {
-          xaxes[[paste0("xaxis", idx)]] <- xaxis_config
-          yaxes[[paste0("yaxis", idx)]] <- yaxis_config
-        }
-
-        # Add panel title
-        annotations[[length(annotations) + 1]] <- list(
-          x = x_start + panel_width / 2,
-          y = y_end + 0.03,
-          text = paste0("<b>", toupper(cat), "</b>"),
-          xref = "paper",
-          yref = "paper",
-          xanchor = "center",
-          yanchor = "bottom",
-          showarrow = FALSE,
-          font = list(size = 11)
-        )
       }
 
-      # Apply layout
-      layout_args <- c(
-        list(
-          title = list(
-            text = paste0("Vehicle Retention Rates by ", category_label),
-            font = list(size = 16)
-          ),
-          annotations = annotations,
-          showlegend = TRUE,
-          legend = list(
-            orientation = "h",
-            x = 0.5,
-            xanchor = "center",
-            y = -0.15,
-            title = list(text = paste0("<b>",
-              if(category_var == "powertrain") "Vehicle Type" else "Powertrain",
-              "</b>"))
-          ),
-          hovermode = "closest",
-          margin = list(t = 80, b = 100, l = 70, r = 30)
-        ),
-        xaxes,
-        yaxes
+      xaxis_config <- list(
+        domain = c(x_start, x_end),
+        range = c(age_min, age_max),
+        title = if (row == n_rows) {
+          list(text = "Vehicle age (years)", font = list(size = 10))
+        } else {
+          ""
+        },
+        tickmode = "linear",
+        tick0 = 1,
+        dtick = 1,
+        showticklabels = TRUE
       )
 
-      fig <- do.call(layout, c(list(fig), layout_args))
+      yaxis_config <- list(
+        domain = c(y_start, y_end),
+        anchor = xaxis_name,
+        range = c(0, 1),
+        tickformat = ".0%",
+        title = if (col == 1) {
+          list(text = "Retention rate", font = list(size = 10))
+        } else {
+          ""
+        },
+        showticklabels = TRUE,
+        fixedrange = FALSE,
+        rangemode = "tozero",
+        constrain = "domain",
+        constraintoward = "bottom"
+      )
 
-      fig <- fig %>%
-        config(
-          displayModeBar = TRUE,
-          modeBarButtonsToRemove = c("lasso2d", "select2d"),
-          toImageButtonOptions = list(format = "png", filename = "retention_plot")
-        )
+      if (idx == 1) {
+        xaxes[["xaxis"]] <- xaxis_config
+        yaxes[["yaxis"]] <- yaxis_config
+      } else {
+        xaxes[[paste0("xaxis", idx)]] <- xaxis_config
+        yaxes[[paste0("yaxis", idx)]] <- yaxis_config
+      }
 
-      return(fig)
+      annotations[[length(annotations) + 1]] <- list(
+        x = x_start + panel_width / 2,
+        y = y_end + 0.03,
+        text = paste0("<b>", toupper(cat_value), "</b>"),
+        xref = "paper",
+        yref = "paper",
+        xanchor = "center",
+        yanchor = "bottom",
+        showarrow = FALSE,
+        font = list(size = 11)
+      )
+    }
 
-    }, error = function(e) {
-      return(plot_ly() %>%
-               add_annotations(text = paste("Error:", e$message),
-                             xref = "paper", yref = "paper",
-                             x = 0.5, y = 0.5, showarrow = FALSE,
-                             font = list(size = 14, color = "red")))
-    })
+    layout_args <- c(
+      list(
+        title = list(
+          text = paste0("Vehicle Retention Rates by ", category_label),
+          font = list(size = 16)
+        ),
+        annotations = annotations,
+        showlegend = TRUE,
+        legend = list(
+          orientation = "h",
+          x = 0.5,
+          xanchor = "center",
+          y = -0.15,
+          title = list(text = paste0("<b>", secondary_label, "</b>"))
+        ),
+        hovermode = "closest",
+        margin = list(t = 80, b = 100, l = 70, r = 30)
+      ),
+      xaxes,
+      yaxes
+    )
+
+    fig <- do.call(layout, c(list(fig), layout_args))
+
+    fig %>%
+      config(
+        displayModeBar = TRUE,
+        modeBarButtonsToRemove = c("lasso2d", "select2d"),
+        toImageButtonOptions = list(format = "png", filename = "retention_plot")
+      )
+  })
+
+  output$mileage_table <- DT::renderDataTable({
+    context <- mileage_plot_context()
+
+    if (is.null(context) || context$status != "ok") {
+      message <- if (!is.null(context$message)) context$message else "No mileage data available"
+      table_data <- tibble::tibble(Message = message)
+      return(DT::datatable(table_data, options = list(dom = "t"), rownames = FALSE))
+    }
+
+    table_data <- build_mileage_summary(context)
+
+    if (nrow(table_data) == 0) {
+      table_data <- tibble::tibble(Message = "No mileage data available")
+      return(DT::datatable(table_data, options = list(dom = "t"), rownames = FALSE))
+    }
+
+    if (context$category_var == "powertrain") {
+      table_data <- table_data %>%
+        rename(
+          Powertrain = powertrain,
+          `Vehicle Type` = vehicle_type
+        ) %>%
+        select(Powertrain, `Vehicle Type`, everything())
+    } else {
+      table_data <- table_data %>%
+        rename(
+          `Vehicle Type` = vehicle_type,
+          Powertrain = powertrain
+        ) %>%
+        select(`Vehicle Type`, Powertrain, everything())
+    }
+
+    DT::datatable(
+      table_data,
+      options = list(pageLength = 10, scrollX = TRUE),
+      rownames = FALSE
+    )
+  })
+
+  output$retention_table <- DT::renderDataTable({
+    context <- retention_plot_context()
+
+    if (is.null(context) || context$status != "ok") {
+      message <- if (!is.null(context$message)) context$message else "No retention data available"
+      table_data <- tibble::tibble(Message = message)
+      return(DT::datatable(table_data, options = list(dom = "t"), rownames = FALSE))
+    }
+
+    table_data <- build_retention_summary(context)
+
+    if (nrow(table_data) == 0) {
+      table_data <- tibble::tibble(Message = "No retention data available")
+      return(DT::datatable(table_data, options = list(dom = "t"), rownames = FALSE))
+    }
+
+    if (context$category_var == "powertrain") {
+      table_data <- table_data %>%
+        rename(
+          Powertrain = powertrain,
+          `Vehicle Type` = vehicle_type
+        ) %>%
+        select(Powertrain, `Vehicle Type`, everything())
+    } else {
+      table_data <- table_data %>%
+        rename(
+          `Vehicle Type` = vehicle_type,
+          Powertrain = powertrain
+        ) %>%
+        select(`Vehicle Type`, Powertrain, everything())
+    }
+
+    DT::datatable(
+      table_data,
+      options = list(pageLength = 10, scrollX = TRUE),
+      rownames = FALSE
+    )
   })
 
   # Metrics Table
   output$metrics_table <- DT::renderDataTable({
     data <- filtered_data()
-    
+
     metrics <- data %>%
       group_by(powertrain, vehicle_type) %>%
       summarise(
@@ -1728,10 +1895,133 @@ output$cdf_plot <- renderPlotly({
         Max_CDF = round(max(quantile), 2),
         .groups = "drop"
       )
-    
+
     DT::datatable(metrics, options = list(pageLength = 10, scrollX = TRUE))
   })
-  
+
+  # HHI Market Concentration Plot Title
+  output$hhi_plot_title <- renderText({
+    metric <- input$hhi_metric
+    titles <- list(
+      "make" = "Brand (Make) Concentration by Powertrain",
+      "type" = "Vehicle Type Concentration by Powertrain",
+      "price" = "Price Bin Concentration by Powertrain"
+    )
+    return(titles[[metric]])
+  })
+
+  # Unified HHI Plot
+  output$hhi_plot <- renderPlotly({
+    # Get selected metric
+    metric <- input$hhi_metric
+
+    # Load appropriate dataset
+    hhi_data <- switch(metric,
+      "make" = hhi_make_data(),
+      "type" = hhi_type_data(),
+      "price" = hhi_price_data(),
+      hhi_make_data()
+    )
+
+    if (nrow(hhi_data) == 0) {
+      return(plotly_empty())
+    }
+
+    # Convert powertrain to factor with clean labels and create display names
+    hhi_data <- hhi_data %>%
+      mutate(
+        powertrain_lower = tolower(powertrain),
+        powertrain_label = case_when(
+          powertrain_lower == "bev" ~ "BEV",
+          powertrain_lower == "cv" ~ "CV",
+          powertrain_lower == "diesel" ~ "Diesel",
+          powertrain_lower == "flex" ~ "Flex",
+          powertrain_lower == "hev" ~ "HEV",
+          powertrain_lower == "phev" ~ "PHEV",
+          TRUE ~ toupper(powertrain)
+        )
+      )
+
+    # Create box plot using quartile statistics - side by side comparison
+    fig <- plot_ly()
+
+    # Get unique powertrains in order
+    powertrains_ordered <- unique(hhi_data$powertrain_label)
+
+    for (pt in powertrains_ordered) {
+      pt_data <- hhi_data %>% filter(powertrain_label == pt)
+
+      for (yr in c("2018", "2024")) {
+        yr_data <- pt_data %>% filter(year == yr)
+
+        if (nrow(yr_data) > 0) {
+          # Color scheme: Coral for 2018, Teal for 2024
+          color <- if (yr == "2018") "rgba(255, 107, 107, 0.7)" else "rgba(78, 205, 196, 0.7)"
+          line_color <- if (yr == "2018") "rgb(200, 50, 50)" else "rgb(40, 150, 140)"
+
+          fig <- fig %>%
+            add_trace(
+              type = "box",
+              x = rep(pt, nrow(yr_data)),
+              q1 = list(yr_data$q25),
+              median = list(yr_data$median),
+              q3 = list(yr_data$q75),
+              lowerfence = list(pmax(0, yr_data$lower)),
+              upperfence = list(pmin(1, yr_data$upper)),
+              name = yr,
+              marker = list(
+                color = color,
+                line = list(color = line_color, width = 2)
+              ),
+              line = list(color = line_color, width = 2),
+              legendgroup = yr,
+              showlegend = (pt == powertrains_ordered[1]),
+              boxmean = FALSE,
+              hovertemplate = paste0(
+                "<b>", pt, " (", yr, ")</b><br>",
+                "Median HHI: ", round(yr_data$median, 3), "<br>",
+                "Q1: ", round(yr_data$q25, 3), "<br>",
+                "Q3: ", round(yr_data$q75, 3), "<br>",
+                "IQR: ", round(yr_data$IQR, 3), "<br>",
+                "<extra></extra>"
+              )
+            )
+        }
+      }
+    }
+
+    fig <- fig %>%
+      layout(
+        xaxis = list(
+          title = "Powertrain Type",
+          categoryorder = "array",
+          categoryarray = powertrains_ordered
+        ),
+        yaxis = list(
+          title = "HHI (0 = Perfect Competition, 1 = Monopoly)",
+          range = c(0, 1),
+          tickformat = ".2f",
+          gridcolor = "rgba(200, 200, 200, 0.3)"
+        ),
+        boxmode = "group",
+        boxgap = 0.2,
+        boxgroupgap = 0.1,
+        hovermode = "closest",
+        legend = list(
+          orientation = "h",
+          x = 0.5,
+          xanchor = "center",
+          y = -0.12,
+          title = list(text = "<b>Year</b>", font = list(size = 14))
+        ),
+        margin = list(t = 50, b = 100, l = 90, r = 30),
+        plot_bgcolor = "rgba(240, 240, 240, 0.5)",
+        paper_bgcolor = "white"
+      )
+
+    return(fig)
+  })
+
   # Raw Data Table
   output$raw_data_table <- DT::renderDataTable({
     DT::datatable(filtered_data(), options = list(pageLength = 15, scrollX = TRUE))
@@ -1829,201 +2119,6 @@ output$cdf_plot <- renderPlotly({
         Std_Dev = round(sd(dvmt), 2),
         .groups = "drop"
       )
-  })
-
-  # Make & Model Analysis
-  # Load make/model data
-  make_model_mileage_data <- reactive({
-    data_paths <- c(
-      "data/mileage_make_model.csv",
-      "../data/mileage_make_model.csv",
-      file.path(dirname(getwd()), "data", "mileage_make_model.csv")
-    )
-
-    data_path <- NULL
-    for (path in data_paths) {
-      if (file.exists(path)) {
-        data_path <- path
-        break
-      }
-    }
-
-    if (!is.null(data_path)) {
-      read.csv(data_path)
-    } else {
-      NULL
-    }
-  })
-
-  make_model_depreciation_data <- reactive({
-    data_paths <- c(
-      "data/depreciation_make_model.csv",
-      "../data/depreciation_make_model.csv",
-      file.path(dirname(getwd()), "data", "depreciation_make_model.csv")
-    )
-
-    data_path <- NULL
-    for (path in data_paths) {
-      if (file.exists(path)) {
-        data_path <- path
-        break
-      }
-    }
-
-    if (!is.null(data_path)) {
-      read.csv(data_path)
-    } else {
-      NULL
-    }
-  })
-
-  # Update make selector based on selected metric
-  observe({
-    metric <- input$make_model_metric
-
-    if (metric == "mileage") {
-      data <- make_model_mileage_data()
-    } else {
-      data <- make_model_depreciation_data()
-    }
-
-    if (!is.null(data)) {
-      makes <- sort(unique(data$make))
-      updateSelectInput(session, "make_model_make",
-                       choices = makes,
-                       selected = makes[1])
-    }
-  })
-
-  # Update model selector based on selected make
-  observe({
-    req(input$make_model_make)
-    metric <- input$make_model_metric
-
-    if (metric == "mileage") {
-      data <- make_model_mileage_data()
-    } else {
-      data <- make_model_depreciation_data()
-    }
-
-    if (!is.null(data)) {
-      models <- data %>%
-        filter(make == input$make_model_make) %>%
-        pull(model) %>%
-        unique() %>%
-        sort()
-
-      updateSelectInput(session, "make_model_model",
-                       choices = models,
-                       selected = models[1])
-    }
-  })
-
-  # Dynamic title
-  output$make_model_title <- renderText({
-    metric_name <- if (input$make_model_metric == "mileage") {
-      "Cumulative Mileage"
-    } else {
-      "Depreciation Rate"
-    }
-    paste(metric_name, "by Make & Model")
-  })
-
-  # Make & Model Plot
-  output$make_model_plot <- renderPlotly({
-    req(input$make_model_make, input$make_model_model)
-
-    metric <- input$make_model_metric
-
-    if (metric == "mileage") {
-      data <- make_model_mileage_data()
-      y_col <- "mileage_predicted"
-      y_label <- "Cumulative Mileage (miles)"
-    } else {
-      data <- make_model_depreciation_data()
-      y_col <- "rr_predicted"
-      y_label <- "Retention Rate"
-    }
-
-    if (is.null(data)) {
-      return(plot_ly() %>%
-               layout(title = "Data not available"))
-    }
-
-    # Filter data
-    plot_data <- data %>%
-      filter(make == input$make_model_make,
-             model %in% input$make_model_model,
-             age_years >= input$make_model_age_range[1],
-             age_years <= input$make_model_age_range[2])
-
-    if (nrow(plot_data) == 0) {
-      return(plot_ly() %>%
-               layout(title = "No data available for selected filters"))
-    }
-
-    # Create plot
-    p <- plot_ly()
-
-    models <- unique(plot_data$model)
-    colors <- scales::viridis_pal()(length(models))
-
-    for (i in seq_along(models)) {
-      model_data <- plot_data %>% filter(model == models[i])
-
-      p <- p %>%
-        add_trace(
-          data = model_data,
-          x = ~age_years,
-          y = as.formula(paste0("~", y_col)),
-          type = 'scatter',
-          mode = 'lines+markers',
-          name = paste(model_data$make[1], model_data$model[1]),
-          line = list(color = colors[i], width = 2.5),
-          marker = list(color = colors[i], size = 6),
-          hovertemplate = paste0(
-            "<b>", paste(model_data$make[1], model_data$model[1]), "</b><br>",
-            "Age: %{x:.1f} years<br>",
-            if (metric == "mileage") "Mileage: %{y:,.0f}<br>" else "Retention: %{y:.2%}<br>",
-            "<extra></extra>"
-          )
-        )
-    }
-
-    # Configure layout
-    p <- p %>%
-      layout(
-        title = NULL,
-        xaxis = list(
-          title = "Vehicle Age (years)",
-          gridcolor = '#e0e0e0',
-          showgrid = TRUE
-        ),
-        yaxis = list(
-          title = y_label,
-          gridcolor = '#e0e0e0',
-          showgrid = TRUE,
-          tickformat = if (metric == "depreciation") ",.0%" else ","
-        ),
-        legend = list(
-          orientation = "v",
-          x = 1.02,
-          xanchor = "left",
-          y = 1,
-          yanchor = "top"
-        ),
-        hovermode = 'closest',
-        plot_bgcolor = 'white',
-        paper_bgcolor = 'white',
-        margin = list(r = 150)
-      ) %>%
-      config(
-        displayModeBar = TRUE,
-        modeBarButtonsToRemove = c('lasso2d', 'select2d'),
-        toImageButtonOptions = list(format = 'png', filename = 'make_model_plot')
-      )
-
-    return(p)
   })
 }
 
