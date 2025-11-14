@@ -6,8 +6,6 @@ project:
     browser: true
   render:
     - "*.qmd"
-  resources:
-    - "data/"
 
 website:
   title: "US Vehicle Trends"
