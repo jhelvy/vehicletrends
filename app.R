@@ -148,6 +148,10 @@ ui <- page_navbar(
                                      "SUV" = "suv"),
                         selected = c("car", "cuv", "minivan", "pickup", "suv")),
 
+    checkboxInput("show_confidence_bands",
+                  "Show Confidence Regions (25th-75th percentile)",
+                  value = FALSE),
+
     hr(),
 
     h5("Metric-Specific Controls", style = "font-weight: bold; color: #2c3e50;"),
@@ -171,8 +175,8 @@ ui <- page_navbar(
     ),
 
     conditionalPanel(
-      condition = "input.tabs == 'Cumulative VMT'",
-      h6("Cumulative VMT Controls", style = "font-weight: 600; color: #34495e;"),
+      condition = "input.tabs == 'Annual VMT'",
+      h6("Annual VMT Controls", style = "font-weight: 600; color: #34495e;"),
 
       radioButtons("comparison_category",
                   "Compare by Category:",
@@ -184,9 +188,7 @@ ui <- page_navbar(
 
       sliderInput("age_range",
                  "Vehicle Age Range (Years):",
-                 min = 1, max = 10, value = c(2, 8), step = 0.5),
-
-      checkboxInput("show_confidence_bands", "Show Confidence Bands", TRUE)
+                 min = 1, max = 10, value = c(2, 8), step = 0.5)
     ),
 
     conditionalPanel(
@@ -207,7 +209,7 @@ ui <- page_navbar(
     ),
 
     conditionalPanel(
-      condition = "input.tabs == 'Market Concentration'",
+      condition = "input.tabs == 'Market Conc.'",
       h6("Market Concentration Controls", style = "font-weight: 600; color: #34495e;"),
 
       radioButtons("hhi_metric",
@@ -215,8 +217,17 @@ ui <- page_navbar(
                   choices = list("Brand (Make)" = "make",
                                "Vehicle Type" = "type",
                                "Price Bin" = "price"),
-                  selected = "make")
-    )
+                  selected = "make"),
+
+      checkboxGroupInput("hhi_powertrains",
+                        "Show Powertrains:",
+                        choices = list("BEV" = "bev",
+                                     "Conventional" = "cv",
+                                     "Hybrid" = "hev",
+                                     "PHEV" = "phev"),
+                        selected = c("bev", "cv", "hev", "phev"))
+    ),
+
   ),
   
   # Daily VMT Page
@@ -234,10 +245,10 @@ ui <- page_navbar(
     )
   ),
   
-  # Cumulative VMT Page
+  # Annual VMT Page
   nav_panel(
-    title = "Cumulative VMT",
-    value = "Cumulative VMT",
+    title = "Annual VMT",
+    value = "Annual VMT",
     icon = icon("road"),
     card(
       full_screen = TRUE,
@@ -247,15 +258,26 @@ ui <- page_navbar(
       ),
       plotlyOutput("mileage_plot", height = "800px")
     ),
-    card(
-      card_header(
-        "Mileage Summary Table",
-        class = "text-center"
+    # Two-column layout for tables
+    layout_columns(
+      col_widths = c(6, 6),
+      card(
+        card_header(
+          "Mileage Summary Table (Powertrain-Vehicle Type)",
+          class = "text-center"
+        ),
+        DT::dataTableOutput("mileage_table")
       ),
-      DT::dataTableOutput("mileage_table")
+      card(
+        card_header(
+          "Mileage by Make & Model",
+          class = "text-center"
+        ),
+        DT::dataTableOutput("mileage_make_model_table")
+      )
     )
   ),
-  
+
   # Depreciation Page
   nav_panel(
     title = "Depreciation",
@@ -271,19 +293,30 @@ ui <- page_navbar(
       ),
       plotlyOutput("retention_plot", height = "850px")
     ),
-    card(
-      card_header(
-        "Depreciation Summary Table",
-        class = "text-center"
+    # Two-column layout for tables
+    layout_columns(
+      col_widths = c(6, 6),
+      card(
+        card_header(
+          "Depreciation Summary Table (Powertrain-Vehicle Type)",
+          class = "text-center"
+        ),
+        DT::dataTableOutput("retention_table")
       ),
-      DT::dataTableOutput("retention_table")
+      card(
+        card_header(
+          "Depreciation by Make & Model",
+          class = "text-center"
+        ),
+        DT::dataTableOutput("retention_make_model_table")
+      )
     )
   ),
 
   # Market Concentration Page
   nav_panel(
-    title = "Market Concentration",
-    value = "Market Concentration",
+    title = "Market Conc.",
+    value = "Market Conc.",
     icon = icon("chart-bar"),
 
     # HHI Explanation Card
@@ -314,11 +347,75 @@ ui <- page_navbar(
       plotlyOutput("hhi_plot", height = "600px")
     )
   ),
-  
+
+  # Share of Listings Page
+  nav_panel(
+    title = "Listings",
+    value = "Listings",
+    icon = icon("chart-column"),
+    layout_sidebar(
+      sidebar = sidebar(
+        title = "Listings Controls",
+        width = 250,
+
+        radioButtons("share_xaxis",
+                    "X-Axis Variable:",
+                    choices = list("Powertrain" = "powertrain",
+                                 "Vehicle Type" = "vehicle_type",
+                                 "Price Bin" = "price_bin"),
+                    selected = "price_bin"),
+
+        radioButtons("share_facet",
+                    "Facet Variable:",
+                    choices = list("Powertrain" = "powertrain",
+                                 "Vehicle Type" = "vehicle_type",
+                                 "Price Bin" = "price_bin"),
+                    selected = "powertrain")
+      ),
+      card(
+        full_screen = TRUE,
+        card_header("Share of Listings by Variable (2018 vs 2024)", class = "text-center"),
+        plotlyOutput("share_plot", height = "700px")
+      )
+    )
+  ),
+
+  # Dealerships Page
+  nav_panel(
+    title = "Dealerships",
+    value = "Dealerships",
+    icon = icon("shop"),
+    layout_sidebar(
+      sidebar = sidebar(
+        title = "Dealerships Controls",
+        width = 250,
+
+        radioButtons("dealer_var1",
+                    "First Variable:",
+                    choices = list("Powertrain" = "powertrain",
+                                 "Vehicle Type" = "vehicle_type",
+                                 "Price Bin" = "price_bin"),
+                    selected = "powertrain"),
+
+        radioButtons("dealer_var2",
+                    "Second Variable:",
+                    choices = list("Powertrain" = "powertrain",
+                                 "Vehicle Type" = "vehicle_type",
+                                 "Price Bin" = "price_bin"),
+                    selected = "vehicle_type")
+      ),
+      card(
+        full_screen = TRUE,
+        card_header("Percentage of Dealerships with at Least One Vehicle", class = "text-center"),
+        plotlyOutput("dealer_plot", height = "700px")
+      )
+    )
+  ),
+
   # Nearest Vehicle Analysis Page
   nav_panel(
-    title = "Nearest Vehicle",
-    value = "Nearest Vehicle",
+    title = "Nearest",
+    value = "Nearest",
     icon = icon("location-dot"),
     layout_columns(
       col_widths = c(6, 6),
@@ -344,7 +441,55 @@ ui <- page_navbar(
 
 # Define Server (keeping the existing server logic)
 server <- function(input, output, session) {
-  
+
+  # Observer for Listings - update facet choices based on X-axis selection
+  observeEvent(input$share_xaxis, {
+    all_choices <- list("Powertrain" = "powertrain",
+                       "Vehicle Type" = "vehicle_type",
+                       "Price Bin" = "price_bin")
+
+    # Remove the selected X-axis variable from facet choices
+    available_choices <- all_choices[all_choices != input$share_xaxis]
+
+    # Get current facet selection
+    current_facet <- input$share_facet
+
+    # If current facet is same as X-axis, select the first available option
+    new_selection <- if (current_facet == input$share_xaxis) {
+      available_choices[[1]]
+    } else {
+      current_facet
+    }
+
+    updateRadioButtons(session, "share_facet",
+                      choices = available_choices,
+                      selected = new_selection)
+  })
+
+  # Observer for Dealerships - update var2 choices based on var1 selection
+  observeEvent(input$dealer_var1, {
+    all_choices <- list("Powertrain" = "powertrain",
+                       "Vehicle Type" = "vehicle_type",
+                       "Price Bin" = "price_bin")
+
+    # Remove the selected var1 from var2 choices
+    available_choices <- all_choices[all_choices != input$dealer_var1]
+
+    # Get current var2 selection
+    current_var2 <- input$dealer_var2
+
+    # If current var2 is same as var1, select the first available option
+    new_selection <- if (current_var2 == input$dealer_var1) {
+      available_choices[[1]]
+    } else {
+      current_var2
+    }
+
+    updateRadioButtons(session, "dealer_var2",
+                      choices = available_choices,
+                      selected = new_selection)
+  })
+
   # Load VMT data
   sample_data <- reactive({
     # Try multiple potential data paths
@@ -383,8 +528,8 @@ server <- function(input, output, session) {
     if (current_tab == "Daily VMT") {
       # Daily VMT uses sample_data (DVMT)
       data_available <- tryCatch({ sample_data() }, error = function(e) NULL)
-    } else if (current_tab == "Cumulative VMT") {
-      # Cumulative VMT uses mileage_data
+    } else if (current_tab == "Annual VMT") {
+      # Annual VMT uses mileage_data
       data_available <- tryCatch({ mileage_data() }, error = function(e) NULL)
     } else if (current_tab == "Depreciation") {
       # Depreciation uses retention_data
@@ -589,6 +734,173 @@ server <- function(input, output, session) {
     read.csv(data_path)
   })
 
+  # Load Share of Listings data based on selected variables
+  share_listings_data <- reactive({
+    # X-axis variable goes FIRST in filename, facet variable goes SECOND
+    # This matches the data structure where we show percentage breakdown
+    # For example: p_market_price_bin_powertrain.csv shows % of each powertrain within each price bin
+    xaxis_var <- input$share_xaxis
+    facet_var <- input$share_facet
+
+    # Construct filename with X-axis first, then facet
+    filename <- paste0("p_market_", xaxis_var, "_", facet_var, ".csv")
+
+    data_paths <- c(
+      paste0("data/", filename),
+      paste0("../data/", filename),
+      file.path(dirname(getwd()), "data", filename)
+    )
+
+    data_path <- NULL
+    for (path in data_paths) {
+      if (file.exists(path)) {
+        data_path <- path
+        break
+      }
+    }
+
+    if (is.null(data_path)) {
+      stop(paste("Cannot find file:", filename))
+    }
+
+    read.csv(data_path)
+  })
+
+  # Load Dealerships data based on selected variables
+  dealerships_data <- reactive({
+    var1 <- input$dealer_var1
+    var2 <- input$dealer_var2
+
+    # Construct filename
+    filename <- paste0("p_one_", var1, "_", var2, ".csv")
+
+    data_paths <- c(
+      paste0("data/", filename),
+      paste0("../data/", filename),
+      file.path(dirname(getwd()), "data", filename)
+    )
+
+    data_path <- NULL
+    for (path in data_paths) {
+      if (file.exists(path)) {
+        data_path <- path
+        break
+      }
+    }
+
+    if (is.null(data_path)) {
+      stop(paste("Cannot find file:", filename))
+    }
+
+    read.csv(data_path)
+  })
+
+  # Load quantiles for mileage (confidence bands)
+  quantiles_mileage_data <- reactive({
+    data_paths <- c(
+      "data/quantiles_miles.parquet",
+      "../data/quantiles_miles.parquet",
+      file.path(dirname(getwd()), "data", "quantiles_miles.parquet")
+    )
+
+    data_path <- NULL
+    for (path in data_paths) {
+      if (file.exists(path)) {
+        data_path <- path
+        break
+      }
+    }
+
+    if (is.null(data_path)) {
+      return(NULL)  # Return NULL if file not found
+    }
+
+    df <- read_parquet(data_path)
+    # Convert age_months to age_years
+    df %>%
+      mutate(age_years = age_months / 12) %>%
+      select(-age_months)
+  })
+
+  # Load quantiles for retention (confidence bands)
+  quantiles_retention_data <- reactive({
+    data_paths <- c(
+      "data/quantiles_rr.parquet",
+      "../data/quantiles_rr.parquet",
+      file.path(dirname(getwd()), "data", "quantiles_rr.parquet")
+    )
+
+    data_path <- NULL
+    for (path in data_paths) {
+      if (file.exists(path)) {
+        data_path <- path
+        break
+      }
+    }
+
+    if (is.null(data_path)) {
+      return(NULL)  # Return NULL if file not found
+    }
+
+    df <- read_parquet(data_path)
+    # Convert age_months to age_years
+    df %>%
+      mutate(age_years = age_months / 12) %>%
+      select(-age_months)
+  })
+
+  # Load make-model mileage data
+  mileage_make_model_data <- reactive({
+    data_paths <- c(
+      "data/mileage_make_model.csv",
+      "../data/mileage_make_model.csv",
+      file.path(dirname(getwd()), "data", "mileage_make_model.csv")
+    )
+
+    data_path <- NULL
+    for (path in data_paths) {
+      if (file.exists(path)) {
+        data_path <- path
+        break
+      }
+    }
+
+    if (is.null(data_path)) {
+      return(NULL)
+    }
+
+    # Skip first line if it contains "HEAD"
+    first_line <- readLines(data_path, n = 1)
+    skip_lines <- if (grepl("^HEAD", first_line, ignore.case = TRUE)) 1 else 0
+    df <- read.csv(data_path, skip = skip_lines, stringsAsFactors = FALSE)
+    # Convert coef to numeric
+    df$coef <- as.numeric(df$coef)
+    df
+  })
+
+  # Load make-model retention data
+  retention_make_model_data <- reactive({
+    data_paths <- c(
+      "data/depreciation_make_model.csv",
+      "../data/depreciation_make_model.csv",
+      file.path(dirname(getwd()), "data", "depreciation_make_model.csv")
+    )
+
+    data_path <- NULL
+    for (path in data_paths) {
+      if (file.exists(path)) {
+        data_path <- path
+        break
+      }
+    }
+
+    if (is.null(data_path)) {
+      return(NULL)
+    }
+
+    read.csv(data_path)
+  })
+
   # Filtered VMT data based on user inputs
   filtered_data <- reactive({
     data <- sample_data()
@@ -679,6 +991,76 @@ server <- function(input, output, session) {
     data %>%
       filter(powertrain %in% fuel_types,
              vehicle_type %in% vehicle_types)
+  })
+
+  # Filtered make-model mileage data
+  filtered_mileage_make_model <- reactive({
+    data <- mileage_make_model_data()
+
+    if (is.null(data) || nrow(data) == 0) {
+      return(NULL)
+    }
+
+    # Ensure input values exist and are valid
+    fuel_types <- if(is.null(input$fuel_types) || length(input$fuel_types) == 0) {
+      unique(data$powertrain)
+    } else {
+      input$fuel_types
+    }
+
+    # Map BEV subtypes
+    if(any(c("bev_tesla", "bev_non_tesla") %in% fuel_types)) {
+      fuel_types <- c(fuel_types, "bev")
+    }
+    fuel_types <- intersect(fuel_types, unique(data$powertrain))
+
+    vehicle_types <- if(is.null(input$vehicle_types) || length(input$vehicle_types) == 0) {
+      unique(data$vehicle_type)
+    } else {
+      input$vehicle_types
+    }
+
+    data %>%
+      filter(powertrain %in% fuel_types,
+             vehicle_type %in% vehicle_types)
+  })
+
+  # Filtered make-model retention data
+  filtered_retention_make_model <- reactive({
+    data <- retention_make_model_data()
+
+    if (is.null(data) || nrow(data) == 0) {
+      return(NULL)
+    }
+
+    # Ensure input values exist and are valid
+    fuel_types <- if(is.null(input$fuel_types) || length(input$fuel_types) == 0) {
+      unique(data$powertrain)
+    } else {
+      input$fuel_types
+    }
+
+    # Map BEV subtypes
+    if(any(c("bev_tesla", "bev_non_tesla") %in% fuel_types)) {
+      fuel_types <- c(fuel_types, "bev")
+    }
+    fuel_types <- intersect(fuel_types, unique(data$powertrain))
+
+    vehicle_types <- if(is.null(input$vehicle_types) || length(input$vehicle_types) == 0) {
+      unique(data$vehicle_type)
+    } else {
+      input$vehicle_types
+    }
+
+    # Filter by age range if applicable
+    age_min <- if(!is.null(input$age_range)) input$age_range[1] else 1
+    age_max <- if(!is.null(input$age_range)) input$age_range[2] else 9
+
+    data %>%
+      filter(powertrain %in% fuel_types,
+             vehicle_type %in% vehicle_types,
+             age_years >= age_min,
+             age_years <= age_max)
   })
 
   mileage_plot_context <- reactive({
@@ -1289,7 +1671,7 @@ output$cdf_plot <- renderPlotly({
     ggplotly(p)
   })
   
-  # Cumulative VMT by Age - Category-based comparison
+  # Annual VMT by Age - Category-based comparison
   smooth_series <- function(df, y_col, age_seq, span = 0.65) {
     df <- df %>% arrange(age_years)
     if (length(unique(df$age_years)) < 3 || nrow(df) < 3) {
@@ -1438,6 +1820,9 @@ output$cdf_plot <- renderPlotly({
     yaxes <- list()
     annotations <- list()
 
+    # Load quantile data for confidence bands
+    quantiles_data <- quantiles_mileage_data()
+
     for (idx in seq_along(categories)) {
       cat_value <- categories[idx]
 
@@ -1457,6 +1842,10 @@ output$cdf_plot <- renderPlotly({
 
       xaxis_name <- if (idx == 1) "x" else paste0("x", idx)
       yaxis_name <- if (idx == 1) "y" else paste0("y", idx)
+
+      # Calculate adaptive X-axis range for this facet
+      facet_age_min <- age_max
+      facet_age_max <- age_min
 
       if (nrow(cat_data) > 0) {
         available_secondary <- if (category_var == "powertrain") {
@@ -1478,13 +1867,18 @@ output$cdf_plot <- renderPlotly({
 
           min_age <- max(age_min, min(sec_data$age_years))
           max_age <- min(age_max, max(sec_data$age_years))
+
+          # Update facet-specific age range
+          facet_age_min <- min(facet_age_min, min_age)
+          facet_age_max <- max(facet_age_max, max_age)
+
           if (min_age >= max_age) {
             next
           }
           age_seq <- seq(min_age, max_age, length.out = max(80, length(sec_data$age_years) * 5))
           age_seq <- unique(age_seq)
 
-          # Use prediction data (single line, no confidence bands)
+          # Use prediction data for main line
           mileage_smooth <- smooth_series(sec_data, "mileage_predicted", age_seq) %>%
             rename(mileage_predicted = value)
 
@@ -1492,6 +1886,67 @@ output$cdf_plot <- renderPlotly({
             next
           }
 
+          # Add confidence band if quantile data available
+          if (!is.null(quantiles_data) && nrow(quantiles_data) > 0) {
+            # Get quantile data for this combination
+            quant_data <- quantiles_data %>%
+              filter(
+                tolower(powertrain) == tolower(if (category_var == "powertrain") cat_value else sec_cat),
+                tolower(vehicle_type) == tolower(if (category_var == "powertrain") sec_cat else cat_value)
+              )
+
+            if (nrow(quant_data) > 0) {
+              # Filter quantile data to match current age range
+              # Only show confidence bands if checkbox is checked
+              if (input$show_confidence_bands) {
+                quant_data_filtered <- quant_data %>%
+                  filter(age_years >= min_age, age_years <= max_age)
+
+                if (nrow(quant_data_filtered) > 0) {
+                  # Smooth quantile data
+                  quant_smooth_lower <- smooth_series(quant_data_filtered, "miles25", age_seq) %>%
+                    rename(miles25 = value)
+                  quant_smooth_upper <- smooth_series(quant_data_filtered, "miles75", age_seq) %>%
+                    rename(miles75 = value)
+
+                  if (nrow(quant_smooth_lower) > 0 && nrow(quant_smooth_upper) > 0) {
+                    # Add shaded confidence region
+                    fig <- fig %>%
+                      add_trace(
+                        data = quant_smooth_upper,
+                        x = ~age_years,
+                        y = ~miles75,
+                        type = "scatter",
+                        mode = "lines",
+                        line = list(width = 0),
+                        showlegend = FALSE,
+                        legendgroup = sec_cat,
+                        xaxis = xaxis_name,
+                        yaxis = yaxis_name,
+                        hoverinfo = "skip"
+                      ) %>%
+                      add_trace(
+                        data = quant_smooth_lower,
+                        x = ~age_years,
+                        y = ~miles25,
+                        type = "scatter",
+                        mode = "lines",
+                        fill = "tonexty",
+                        fillcolor = paste0(substr(color_map[sec_cat], 1, 7), "20"),  # 20 = ~12% opacity
+                        line = list(width = 0),
+                        showlegend = FALSE,
+                        legendgroup = sec_cat,
+                        xaxis = xaxis_name,
+                        yaxis = yaxis_name,
+                        hoverinfo = "skip"
+                      )
+                  }
+                }
+              }
+            }
+          }
+
+          # Add main prediction line
           fig <- fig %>%
             add_trace(
               data = mileage_smooth,
@@ -1515,9 +1970,16 @@ output$cdf_plot <- renderPlotly({
         }
       }
 
+      # Use adaptive range if data exists, otherwise use global range
+      x_range <- if (facet_age_min < facet_age_max) {
+        c(facet_age_min, facet_age_max)
+      } else {
+        c(age_min, age_max)
+      }
+
       xaxis_config <- list(
         domain = c(x_start, x_end),
-        range = c(age_min, age_max),
+        range = x_range,
         showticklabels = TRUE,
         title = if (row == n_rows) {
           list(text = "Vehicle Age (years)", font = list(size = 10))
@@ -1644,6 +2106,9 @@ output$cdf_plot <- renderPlotly({
     yaxes <- list()
     annotations <- list()
 
+    # Load quantile data for confidence bands
+    quantiles_data <- quantiles_retention_data()
+
     for (idx in seq_along(categories)) {
       cat_value <- categories[idx]
 
@@ -1663,6 +2128,10 @@ output$cdf_plot <- renderPlotly({
 
       xaxis_name <- if (idx == 1) "x" else paste0("x", idx)
       yaxis_name <- if (idx == 1) "y" else paste0("y", idx)
+
+      # Calculate adaptive X-axis range for this facet
+      facet_age_min <- age_max
+      facet_age_max <- age_min
 
       if (nrow(cat_data) > 0) {
         available_secondary <- if (category_var == "powertrain") {
@@ -1684,13 +2153,18 @@ output$cdf_plot <- renderPlotly({
 
           min_age <- max(age_min, min(sec_data$age_years))
           max_age <- min(age_max, max(sec_data$age_years))
+
+          # Update facet-specific age range
+          facet_age_min <- min(facet_age_min, min_age)
+          facet_age_max <- max(facet_age_max, max_age)
+
           if (min_age >= max_age) {
             next
           }
           age_seq <- seq(min_age, max_age, length.out = max(80, length(sec_data$age_years) * 5))
           age_seq <- unique(age_seq)
 
-          # Use prediction data (single line, no confidence bands)
+          # Use prediction data for main line
           rr_smooth <- smooth_series(sec_data, "rr_predicted", age_seq, span = 0.6) %>%
             rename(rr_predicted = value)
 
@@ -1698,6 +2172,67 @@ output$cdf_plot <- renderPlotly({
             next
           }
 
+          # Add confidence band if quantile data available
+          if (!is.null(quantiles_data) && nrow(quantiles_data) > 0) {
+            # Get quantile data for this combination
+            quant_data <- quantiles_data %>%
+              filter(
+                tolower(powertrain) == tolower(if (category_var == "powertrain") cat_value else sec_cat),
+                tolower(vehicle_type) == tolower(if (category_var == "powertrain") sec_cat else cat_value)
+              )
+
+            if (nrow(quant_data) > 0) {
+              # Only show confidence bands if checkbox is checked
+              if (input$show_confidence_bands) {
+                # Filter quantile data to match current age range
+                quant_data_filtered <- quant_data %>%
+                  filter(age_years >= min_age, age_years <= max_age)
+
+                if (nrow(quant_data_filtered) > 0) {
+                  # Smooth quantile data
+                  quant_smooth_lower <- smooth_series(quant_data_filtered, "rr25", age_seq, span = 0.6) %>%
+                    rename(rr25 = value)
+                  quant_smooth_upper <- smooth_series(quant_data_filtered, "rr75", age_seq, span = 0.6) %>%
+                    rename(rr75 = value)
+
+                  if (nrow(quant_smooth_lower) > 0 && nrow(quant_smooth_upper) > 0) {
+                  # Add shaded confidence region
+                  fig <- fig %>%
+                    add_trace(
+                      data = quant_smooth_upper,
+                      x = ~age_years,
+                      y = ~rr75,
+                      type = "scatter",
+                      mode = "lines",
+                      line = list(width = 0),
+                      showlegend = FALSE,
+                      legendgroup = sec_cat,
+                      xaxis = xaxis_name,
+                      yaxis = yaxis_name,
+                      hoverinfo = "skip"
+                    ) %>%
+                    add_trace(
+                      data = quant_smooth_lower,
+                      x = ~age_years,
+                      y = ~rr25,
+                      type = "scatter",
+                      mode = "lines",
+                      fill = "tonexty",
+                      fillcolor = paste0(substr(color_map[sec_cat], 1, 7), "30"),  # 30 = ~20% opacity
+                      line = list(width = 0),
+                      showlegend = FALSE,
+                      legendgroup = sec_cat,
+                      xaxis = xaxis_name,
+                      yaxis = yaxis_name,
+                      hoverinfo = "skip"
+                    )
+                  }
+                }
+              }
+            }
+          }
+
+          # Add main prediction line
           fig <- fig %>%
             add_trace(
               data = rr_smooth,
@@ -1721,9 +2256,16 @@ output$cdf_plot <- renderPlotly({
         }
       }
 
+      # Use adaptive range if data exists, otherwise use global range
+      x_range <- if (facet_age_min < facet_age_max) {
+        c(facet_age_min, facet_age_max)
+      } else {
+        c(age_min, age_max)
+      }
+
       xaxis_config <- list(
         domain = c(x_start, x_end),
-        range = c(age_min, age_max),
+        range = x_range,
         title = if (row == n_rows) {
           list(text = "Vehicle age (years)", font = list(size = 10))
         } else {
@@ -1738,7 +2280,7 @@ output$cdf_plot <- renderPlotly({
       yaxis_config <- list(
         domain = c(y_start, y_end),
         anchor = xaxis_name,
-        range = c(0, 1),
+        range = c(0, 1.2),  # Set to 120% (1.2)
         tickformat = ".0%",
         title = if (col == 1) {
           list(text = "Retention rate", font = list(size = 10))
@@ -1746,10 +2288,7 @@ output$cdf_plot <- renderPlotly({
           ""
         },
         showticklabels = TRUE,
-        fixedrange = FALSE,
-        rangemode = "tozero",
-        constrain = "domain",
-        constraintoward = "bottom"
+        fixedrange = TRUE  # Fix Y-axis to prevent zooming beyond 120%
       )
 
       if (idx == 1) {
@@ -1883,6 +2422,75 @@ output$cdf_plot <- renderPlotly({
     )
   })
 
+  # Make-Model Mileage Table
+  output$mileage_make_model_table <- DT::renderDataTable({
+    data <- filtered_mileage_make_model()
+
+    if (is.null(data) || nrow(data) == 0) {
+      table_data <- tibble::tibble(Message = "No make-model data available")
+      return(DT::datatable(table_data, options = list(dom = "t"), rownames = FALSE))
+    }
+
+    # Format the table
+    table_data <- data %>%
+      mutate(
+        Make = tools::toTitleCase(make),
+        Model = tools::toTitleCase(model),
+        `Vehicle Type` = toupper(vehicle_type),
+        Powertrain = toupper(powertrain),
+        `Coefficient (miles/year)` = round(coef, 0)
+      ) %>%
+      select(Make, Model, `Vehicle Type`, Powertrain, `Coefficient (miles/year)`) %>%
+      arrange(Make, Model)
+
+    DT::datatable(
+      table_data,
+      options = list(pageLength = 10, scrollX = TRUE, searchHighlight = TRUE),
+      rownames = FALSE,
+      filter = "top"
+    )
+  })
+
+  # Make-Model Retention Table
+  output$retention_make_model_table <- DT::renderDataTable({
+    data <- filtered_retention_make_model()
+
+    if (is.null(data) || nrow(data) == 0) {
+      table_data <- tibble::tibble(Message = "No make-model data available")
+      return(DT::datatable(table_data, options = list(dom = "t"), rownames = FALSE))
+    }
+
+    # Calculate summary statistics per make-model combination
+    table_data <- data %>%
+      group_by(make, model, powertrain, vehicle_type) %>%
+      summarise(
+        age_start = min(age_years),
+        age_end = max(age_years),
+        rr_start = rr_predicted[which.min(age_years)],
+        rr_end = rr_predicted[which.max(age_years)],
+        .groups = "drop"
+      ) %>%
+      mutate(
+        annual_change_pp = round((rr_end - rr_start) / (age_end - age_start) * 100, 2),
+        Make = tools::toTitleCase(make),
+        Model = tools::toTitleCase(model),
+        `Vehicle Type` = toupper(vehicle_type),
+        Powertrain = toupper(powertrain),
+        `Retention (Start)` = scales::percent(rr_start, accuracy = 0.1),
+        `Retention (End)` = scales::percent(rr_end, accuracy = 0.1),
+        `Annual Change (pp)` = annual_change_pp
+      ) %>%
+      select(Make, Model, `Vehicle Type`, Powertrain, `Retention (Start)`, `Retention (End)`, `Annual Change (pp)`) %>%
+      arrange(Make, Model)
+
+    DT::datatable(
+      table_data,
+      options = list(pageLength = 10, scrollX = TRUE, searchHighlight = TRUE),
+      rownames = FALSE,
+      filter = "top"
+    )
+  })
+
   # Metrics Table
   output$metrics_table <- DT::renderDataTable({
     data <- filtered_data()
@@ -1940,7 +2548,8 @@ output$cdf_plot <- renderPlotly({
           powertrain_lower == "phev" ~ "PHEV",
           TRUE ~ toupper(powertrain)
         )
-      )
+      ) %>%
+      filter(powertrain_lower %in% input$hhi_powertrains)
 
     # Create box plot using quartile statistics - side by side comparison
     fig <- plot_ly()
@@ -1962,7 +2571,7 @@ output$cdf_plot <- renderPlotly({
           fig <- fig %>%
             add_trace(
               type = "box",
-              x = rep(pt, nrow(yr_data)),
+              y = rep(pt, nrow(yr_data)),
               q1 = list(yr_data$q25),
               median = list(yr_data$median),
               q3 = list(yr_data$q75),
@@ -1977,6 +2586,7 @@ output$cdf_plot <- renderPlotly({
               legendgroup = yr,
               showlegend = (pt == powertrains_ordered[1]),
               boxmean = FALSE,
+              orientation = "h",
               hovertemplate = paste0(
                 "<b>", pt, " (", yr, ")</b><br>",
                 "Median HHI: ", round(yr_data$median, 3), "<br>",
@@ -1992,12 +2602,12 @@ output$cdf_plot <- renderPlotly({
 
     fig <- fig %>%
       layout(
-        xaxis = list(
+        yaxis = list(
           title = "Powertrain Type",
           categoryorder = "array",
           categoryarray = powertrains_ordered
         ),
-        yaxis = list(
+        xaxis = list(
           title = "HHI (0 = Perfect Competition, 1 = Monopoly)",
           range = c(0, 1),
           tickformat = ".2f",
@@ -2017,6 +2627,372 @@ output$cdf_plot <- renderPlotly({
         margin = list(t = 50, b = 100, l = 90, r = 30),
         plot_bgcolor = "rgba(240, 240, 240, 0.5)",
         paper_bgcolor = "white"
+      )
+
+    return(fig)
+  })
+
+  # Share of Listings Plot
+  output$share_plot <- renderPlotly({
+    data <- share_listings_data()
+
+    if (nrow(data) == 0) {
+      return(plotly_empty())
+    }
+
+    # Label mapping function
+    get_label <- function(var_name, value) {
+      if (var_name == "powertrain") {
+        labels <- c("bev" = "BEV", "cv" = "Conventional", "hev" = "Hybrid",
+                   "phev" = "PHEV")
+        return(labels[value])
+      } else if (var_name == "vehicle_type") {
+        labels <- c("car" = "Car", "suv" = "SUV", "pickup" = "Pickup",
+                   "minivan" = "Minivan")
+        return(labels[value])
+      } else {
+        return(value)
+      }
+    }
+
+    # Get selected variables
+    xaxis_var <- input$share_xaxis
+    facet_var <- input$share_facet
+
+    # Get unique facet values for subplots with proper ordering
+    if (facet_var == "powertrain") {
+      facet_order <- c("bev", "cv", "hev", "phev")
+      facet_values <- intersect(facet_order, unique(data[[facet_var]]))
+    } else if (facet_var == "vehicle_type") {
+      facet_order <- c("car", "suv", "pickup", "minivan")
+      facet_values <- intersect(facet_order, unique(data[[facet_var]]))
+    } else if (facet_var == "price_bin") {
+      facet_order <- c("$0-$30k", "$30k-$40k", "$40k-$50k", "$50k-$60k", "$60k+")
+      facet_values <- intersect(facet_order, unique(data[[facet_var]]))
+    } else {
+      facet_values <- sort(unique(data[[facet_var]]))
+    }
+    n_facets <- length(facet_values)
+
+    # Create list to store individual plots
+    plot_list <- list()
+
+    for (i in seq_along(facet_values)) {
+      facet_val <- facet_values[i]
+
+      # Filter data for this facet
+      facet_data <- data %>%
+        filter(.data[[facet_var]] == facet_val)
+
+      # Get unique x-axis values with proper ordering
+      if (xaxis_var == "price_bin") {
+        xaxis_order <- c("$0-$30k", "$30k-$40k", "$40k-$50k", "$50k-$60k", "$60k+")
+        xaxis_values <- intersect(xaxis_order, unique(facet_data[[xaxis_var]]))
+      } else if (xaxis_var == "powertrain") {
+        xaxis_order <- c("bev", "cv", "hev", "phev")
+        xaxis_values <- intersect(xaxis_order, unique(facet_data[[xaxis_var]]))
+      } else if (xaxis_var == "vehicle_type") {
+        xaxis_order <- c("car", "suv", "pickup", "minivan")
+        xaxis_values <- intersect(xaxis_order, unique(facet_data[[xaxis_var]]))
+      } else {
+        xaxis_values <- sort(unique(facet_data[[xaxis_var]]))
+      }
+
+      # Create a plot for this facet
+      p <- plot_ly()
+
+      for (j in seq_along(xaxis_values)) {
+        x_val <- xaxis_values[j]
+        x_label <- get_label(xaxis_var, x_val)
+        x_data <- facet_data %>%
+          filter(.data[[xaxis_var]] == x_val)
+
+        if (nrow(x_data) > 0) {
+          val_2018 <- x_data$year_2018[1]
+          val_2024 <- x_data$year_2024[1]
+
+          # Add line connecting 2018 to 2024 (vertical dumbbell)
+          p <- p %>%
+            add_trace(
+              type = "scatter",
+              mode = "lines",
+              x = c(j - 1, j - 1),  # Use numeric position
+              y = c(val_2018, val_2024),
+              line = list(color = "rgba(80, 80, 80, 0.7)", width = 2.5),
+              showlegend = FALSE,
+              hoverinfo = "none"
+            ) %>%
+            # Add circle for 2018
+            add_trace(
+              type = "scatter",
+              mode = "markers",
+              x = c(j - 1),  # Use numeric position
+              y = c(val_2018),
+              marker = list(size = 12, color = "rgba(60, 60, 60, 0.9)",
+                          symbol = "circle", line = list(width = 1, color = "white")),
+              name = if (i == 1 && j == 1) "2018" else NULL,
+              showlegend = if (i == 1 && j == 1) TRUE else FALSE,
+              hovertemplate = paste0(
+                x_label, "<br>",
+                "2018: ", round(val_2018 * 100, 1), "%",
+                "<extra></extra>"
+              ),
+              legendgroup = "2018"
+            ) %>%
+            # Add arrow/triangle for 2024
+            add_trace(
+              type = "scatter",
+              mode = "markers",
+              x = c(j - 1),  # Use numeric position
+              y = c(val_2024),
+              marker = list(
+                size = 13,
+                color = "rgba(60, 60, 60, 0.9)",
+                symbol = if (val_2024 > val_2018) "triangle-up" else "triangle-down",
+                line = list(width = 1, color = "white")
+              ),
+              name = if (i == 1 && j == 1) "2024" else NULL,
+              showlegend = if (i == 1 && j == 1) TRUE else FALSE,
+              hovertemplate = paste0(
+                x_label, "<br>",
+                "2024: ", round(val_2024 * 100, 1), "%",
+                "<extra></extra>"
+              ),
+              legendgroup = "2024"
+            )
+        }
+      }
+
+      # Configure X-axis for this subplot with categorical labels
+      xaxis_labels <- sapply(xaxis_values, function(v) get_label(xaxis_var, v))
+      p <- p %>%
+        layout(
+          xaxis = list(
+            tickmode = "array",
+            tickvals = seq(0, length(xaxis_values) - 1),
+            ticktext = xaxis_labels,
+            tickangle = -45
+          )
+        )
+
+      plot_list[[i]] <- p
+    }
+
+    # Create subplot with facets
+    fig <- subplot(plot_list, nrows = 1, shareY = TRUE, titleX = TRUE, titleY = TRUE,
+                   margin = 0.04)
+
+    # Add titles and layout
+    annotations <- list()
+    for (i in seq_along(facet_values)) {
+      facet_label <- get_label(facet_var, facet_values[i])
+      annotations[[i]] <- list(
+        x = (i - 0.5) / n_facets,
+        y = 1.02,
+        text = paste0("<b>", facet_label, "</b>"),
+        xref = "paper",
+        yref = "paper",
+        xanchor = "center",
+        yanchor = "bottom",
+        showarrow = FALSE,
+        font = list(size = 12)
+      )
+    }
+
+    fig <- fig %>%
+      layout(
+        title = list(
+          text = paste0("Change in Share of Listings by ", tools::toTitleCase(facet_var), " and ", tools::toTitleCase(xaxis_var), " (2018-2024)"),
+          x = 0.5,
+          xanchor = "center",
+          font = list(size = 14)
+        ),
+        annotations = annotations,
+        yaxis = list(
+          title = "Share of Listings (%)",
+          tickformat = ".0%",
+          gridcolor = "rgba(200, 200, 200, 0.3)",
+          gridwidth = 1,
+          showgrid = TRUE,
+          zeroline = TRUE,
+          zerolinecolor = "rgba(150, 150, 150, 0.5)",
+          zerolinewidth = 1
+        ),
+        hovermode = "closest",
+        showlegend = TRUE,
+        legend = list(
+          x = 0.5,
+          xanchor = "center",
+          y = -0.15,
+          yanchor = "top",
+          orientation = "h"
+        ),
+        plot_bgcolor = "rgba(250, 250, 250, 0.5)",
+        paper_bgcolor = "white",
+        margin = list(t = 80, b = 100, l = 80, r = 30)
+      )
+
+    return(fig)
+  })
+
+  # Dealerships Plot
+  output$dealer_plot <- renderPlotly({
+    data <- dealerships_data()
+
+    if (nrow(data) == 0) {
+      return(plotly_empty())
+    }
+
+    # Label mapping function (same as in Listings)
+    get_label <- function(var_name, value) {
+      if (var_name == "powertrain") {
+        labels <- c("bev" = "BEV", "cv" = "Conventional", "hev" = "Hybrid",
+                   "phev" = "PHEV")
+        return(labels[value])
+      } else if (var_name == "vehicle_type") {
+        labels <- c("car" = "Car", "suv" = "SUV", "pickup" = "Pickup",
+                   "minivan" = "Minivan")
+        return(labels[value])
+      } else {
+        return(value)
+      }
+    }
+
+    # Get selected variables
+    var1 <- input$dealer_var1
+    var2 <- input$dealer_var2
+
+    # Get unique values for each variable with proper ordering
+    if (var1 == "powertrain") {
+      var1_order <- c("bev", "cv", "hev", "phev")
+      var1_values <- intersect(var1_order, unique(data[[var1]]))
+    } else if (var1 == "vehicle_type") {
+      var1_order <- c("car", "suv", "pickup", "minivan")
+      var1_values <- intersect(var1_order, unique(data[[var1]]))
+    } else if (var1 == "price_bin") {
+      var1_order <- c("$0-$30k", "$30k-$40k", "$40k-$50k", "$50k-$60k", "$60k+")
+      var1_values <- intersect(var1_order, unique(data[[var1]]))
+    } else {
+      var1_values <- sort(unique(data[[var1]]))
+    }
+
+    if (var2 == "powertrain") {
+      var2_order <- c("bev", "cv", "hev", "phev")
+      var2_values <- intersect(var2_order, unique(data[[var2]]))
+    } else if (var2 == "vehicle_type") {
+      var2_order <- c("car", "suv", "pickup", "minivan")
+      var2_values <- intersect(var2_order, unique(data[[var2]]))
+    } else if (var2 == "price_bin") {
+      var2_order <- c("$0-$30k", "$30k-$40k", "$40k-$50k", "$50k-$60k", "$60k+")
+      var2_values <- intersect(var2_order, unique(data[[var2]]))
+    } else {
+      var2_values <- sort(unique(data[[var2]]))
+    }
+
+    # Create grid dimensions
+    n_rows <- length(var2_values)
+    n_cols <- length(var1_values)
+
+    # Create list to store individual plots
+    plot_list <- list()
+
+    for (i in seq_along(var2_values)) {
+      for (j in seq_along(var1_values)) {
+        val1 <- var1_values[j]
+        val2 <- var2_values[i]
+
+        # Filter data for this combination
+        plot_data <- data %>%
+          filter(.data[[var1]] == val1, .data[[var2]] == val2) %>%
+          arrange(listing_year)
+
+        # Create a plot for this facet
+        p <- plot_ly()
+
+        if (nrow(plot_data) > 0) {
+          p <- p %>%
+            add_trace(
+              type = "scatter",
+              mode = "lines",
+              x = plot_data$listing_year,
+              y = plot_data$p,
+              line = list(color = "rgba(50, 50, 50, 0.8)", width = 2),
+              showlegend = FALSE,
+              hovertemplate = paste0(
+                "Year: %{x}<br>",
+                "Percentage: ", sprintf("%.1f", plot_data$p * 100), "%",
+                "<extra></extra>"
+              )
+            )
+        }
+
+        plot_list[[(i - 1) * n_cols + j]] <- p
+      }
+    }
+
+    # Create subplot grid
+    fig <- subplot(
+      plot_list,
+      nrows = n_rows,
+      shareX = TRUE,
+      shareY = TRUE,
+      titleX = TRUE,
+      titleY = TRUE
+    )
+
+    # Add annotations for facet labels
+    annotations <- list()
+
+    # Column headers (var1 values)
+    for (j in seq_along(var1_values)) {
+      var1_label <- get_label(var1, var1_values[j])
+      annotations[[length(annotations) + 1]] <- list(
+        x = (j - 0.5) / n_cols,
+        y = 1.02,
+        text = paste0("<b>", var1_label, "</b>"),
+        xref = "paper",
+        yref = "paper",
+        xanchor = "center",
+        yanchor = "bottom",
+        showarrow = FALSE,
+        font = list(size = 11)
+      )
+    }
+
+    # Row headers (var2 values)
+    for (i in seq_along(var2_values)) {
+      var2_label <- get_label(var2, var2_values[i])
+      annotations[[length(annotations) + 1]] <- list(
+        x = -0.02,
+        y = 1 - (i - 0.5) / n_rows,
+        text = paste0("<b>", var2_label, "</b>"),
+        xref = "paper",
+        yref = "paper",
+        xanchor = "right",
+        yanchor = "middle",
+        showarrow = FALSE,
+        font = list(size = 11),
+        textangle = -90
+      )
+    }
+
+    fig <- fig %>%
+      layout(
+        title = list(
+          text = paste0("Percentage of Dealerships with At Least One Vehicle<br>",
+                       "<sub>by ", tools::toTitleCase(var1), " and ", tools::toTitleCase(var2), "</sub>"),
+          x = 0.5,
+          xanchor = "center"
+        ),
+        annotations = annotations,
+        xaxis = list(title = "Year"),
+        yaxis = list(
+          title = "Percentage (%)",
+          tickformat = ".0%"
+        ),
+        hovermode = "closest",
+        showlegend = FALSE,
+        margin = list(t = 100, b = 60, l = 100, r = 30)
       )
 
     return(fig)
