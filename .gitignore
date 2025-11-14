@@ -6,3 +6,6 @@
 .vscode
 data_local
 listings.parquet
+/.quarto/
+_site
+site_libs
