@@ -21,23 +21,21 @@ ui <- page_navbar(
   id = "tabs",
   theme = bs_theme(
     version = 5,
-    bootswatch = "cosmo",  # Light, clean theme
-    primary = "#2c3e50",   # Dark blue-gray primary
-    secondary = "#95a5a6", # Light gray secondary  
-    success = "#18bc9c",   # Teal success
-    info = "#3498db",      # Blue info
-    warning = "#f39c12",   # Orange warning
-    danger = "#e74c3c",    # Red danger
+    bootswatch = "flatly", # Light, clean theme
+    success = "#18bc9c", # Teal success
+    warning = "#f39c12", # Orange warning
+    danger = "#e74c3c", # Red danger
     base_font = font_google("Inter"),
     code_font = font_google("JetBrains Mono"),
-    bg = "#ffffff",        # White background
-    fg = "#2c3e50"         # Dark text
+    bg = "#ffffff", # White background
+    fg = "#2c3e50" # Dark text
   ),
   fillable = TRUE,
-  
+
   # Custom CSS for enhanced UI
   header = tags$head(
-    tags$style(HTML("
+    tags$style(HTML(
+      "
       /* Navbar styling */
       .navbar-nav {
         margin: 0 auto;
@@ -119,9 +117,10 @@ ui <- page_navbar(
       h5, h6 {
         letter-spacing: 0.5px;
       }
-    "))
+    "
+    ))
   ),
-  
+
   # Global sidebar for filters (shared across all pages)
   sidebar = sidebar(
     title = "Global Filters",
@@ -129,47 +128,65 @@ ui <- page_navbar(
 
     h5("Dataset Filters", style = "font-weight: bold; color: #2c3e50;"),
 
-    checkboxGroupInput("fuel_types",
-                        "Powertrain Type:",
-                        choices = list("BEV" = "bev",
-                                     "Conventional" = "cv",
-                                     "Diesel" = "diesel",
-                                     "Flex Fuel" = "flex",
-                                     "Hybrid" = "hev",
-                                     "PHEV" = "phev"),
-                        selected = c("bev", "cv", "hev")),
+    checkboxGroupInput(
+      "fuel_types",
+      "Powertrain Type:",
+      choices = list(
+        "BEV" = "bev",
+        "Conventional" = "cv",
+        "Diesel" = "diesel",
+        "Flex Fuel" = "flex",
+        "Hybrid" = "hev",
+        "PHEV" = "phev"
+      ),
+      selected = c("bev", "cv", "hev")
+    ),
 
-    checkboxGroupInput("vehicle_types",
-                        "Vehicle Types:",
-                        choices = list("Car" = "car",
-                                     "CUV" = "cuv",
-                                     "Minivan" = "minivan",
-                                     "Pickup" = "pickup",
-                                     "SUV" = "suv"),
-                        selected = c("car", "cuv", "minivan", "pickup", "suv")),
+    checkboxGroupInput(
+      "vehicle_types",
+      "Vehicle Types:",
+      choices = list(
+        "Car" = "car",
+        "CUV" = "cuv",
+        "Minivan" = "minivan",
+        "Pickup" = "pickup",
+        "SUV" = "suv"
+      ),
+      selected = c("car", "cuv", "minivan", "pickup", "suv")
+    ),
 
-    checkboxInput("show_confidence_bands",
-                  "Show Confidence Regions (25th-75th percentile)",
-                  value = FALSE),
+    checkboxInput(
+      "show_confidence_bands",
+      "Show Confidence Regions (25th-75th percentile)",
+      value = FALSE
+    ),
 
     hr(),
 
-    h5("Metric-Specific Controls", style = "font-weight: bold; color: #2c3e50;"),
+    h5(
+      "Metric-Specific Controls",
+      style = "font-weight: bold; color: #2c3e50;"
+    ),
 
     # Conditional UI for metric-specific filters
     conditionalPanel(
       condition = "input.tabs == 'Daily VMT'",
       h6("Daily VMT Controls", style = "font-weight: 600; color: #34495e;"),
 
-      sliderInput("dvmt_range",
-                 "DVMT Range:",
-                 min = 0, max = 100, value = c(0, 100)),
+      sliderInput(
+        "dvmt_range",
+        "DVMT Range:",
+        min = 0,
+        max = 100,
+        value = c(0, 100)
+      ),
 
-      radioButtons("plot_type", "Plot Type:",
-                  choices = list("CDF" = "cdf",
-                               "PDF" = "pdf",
-                               "Histogram" = "hist"),
-                  selected = "cdf"),
+      radioButtons(
+        "plot_type",
+        "Plot Type:",
+        choices = list("CDF" = "cdf", "PDF" = "pdf", "Histogram" = "hist"),
+        selected = "cdf"
+      ),
 
       checkboxInput("show_aggregated", "Show Aggregated Line", FALSE)
     ),
@@ -178,58 +195,86 @@ ui <- page_navbar(
       condition = "input.tabs == 'Annual VMT'",
       h6("Annual VMT Controls", style = "font-weight: 600; color: #34495e;"),
 
-      radioButtons("comparison_category",
-                  "Compare by Category:",
-                  choices = list("Powertrain" = "powertrain",
-                               "Vehicle Type" = "vehicle_type"),
-                  selected = "powertrain"),
+      radioButtons(
+        "comparison_category",
+        "Compare by Category:",
+        choices = list(
+          "Powertrain" = "powertrain",
+          "Vehicle Type" = "vehicle_type"
+        ),
+        selected = "powertrain"
+      ),
 
       hr(style = "border-color: #ddd; margin: 10px 0;"),
 
-      sliderInput("age_range",
-                 "Vehicle Age Range (Years):",
-                 min = 1, max = 10, value = c(2, 8), step = 0.5)
+      sliderInput(
+        "age_range",
+        "Vehicle Age Range (Years):",
+        min = 1,
+        max = 10,
+        value = c(2, 8),
+        step = 0.5
+      )
     ),
 
     conditionalPanel(
       condition = "input.tabs == 'Depreciation'",
       h6("Depreciation Controls", style = "font-weight: 600; color: #34495e;"),
 
-      radioButtons("depreciation_category",
-                  "Compare by Category:",
-                  choices = list("Powertrain" = "powertrain",
-                               "Vehicle Type" = "vehicle_type"),
-                  selected = "powertrain"),
+      radioButtons(
+        "depreciation_category",
+        "Compare by Category:",
+        choices = list(
+          "Powertrain" = "powertrain",
+          "Vehicle Type" = "vehicle_type"
+        ),
+        selected = "powertrain"
+      ),
 
       hr(style = "border-color: #ddd; margin: 10px 0;"),
 
-      sliderInput("depreciation_age_range",
-                 "Age Range for Analysis (Years):",
-                 min = 1, max = 8, value = c(1, 8), step = 0.5)
+      sliderInput(
+        "depreciation_age_range",
+        "Age Range for Analysis (Years):",
+        min = 1,
+        max = 8,
+        value = c(1, 8),
+        step = 0.5
+      )
     ),
 
     conditionalPanel(
       condition = "input.tabs == 'Market Conc.'",
-      h6("Market Concentration Controls", style = "font-weight: 600; color: #34495e;"),
+      h6(
+        "Market Concentration Controls",
+        style = "font-weight: 600; color: #34495e;"
+      ),
 
-      radioButtons("hhi_metric",
-                  "HHI Metric:",
-                  choices = list("Brand (Make)" = "make",
-                               "Vehicle Type" = "type",
-                               "Price Bin" = "price"),
-                  selected = "make"),
+      radioButtons(
+        "hhi_metric",
+        "HHI Metric:",
+        choices = list(
+          "Brand (Make)" = "make",
+          "Vehicle Type" = "type",
+          "Price Bin" = "price"
+        ),
+        selected = "make"
+      ),
 
-      checkboxGroupInput("hhi_powertrains",
-                        "Show Powertrains:",
-                        choices = list("BEV" = "bev",
-                                     "Conventional" = "cv",
-                                     "Hybrid" = "hev",
-                                     "PHEV" = "phev"),
-                        selected = c("bev", "cv", "hev", "phev"))
+      checkboxGroupInput(
+        "hhi_powertrains",
+        "Show Powertrains:",
+        choices = list(
+          "BEV" = "bev",
+          "Conventional" = "cv",
+          "Hybrid" = "hev",
+          "PHEV" = "phev"
+        ),
+        selected = c("bev", "cv", "hev", "phev")
+      )
     ),
-
   ),
-  
+
   # Daily VMT Page
   nav_panel(
     title = "Daily VMT",
@@ -244,7 +289,7 @@ ui <- page_navbar(
       plotlyOutput("cdf_plot", height = "650px")
     )
   ),
-  
+
   # Annual VMT Page
   nav_panel(
     title = "Annual VMT",
@@ -321,17 +366,27 @@ ui <- page_navbar(
 
     # HHI Explanation Card
     card(
-      card_header("About the Herfindahl-Hirschman Index (HHI)", class = "text-center"),
+      card_header(
+        "About the Herfindahl-Hirschman Index (HHI)",
+        class = "text-center"
+      ),
       div(
         style = "padding: 10px 15px; font-size: 13px; line-height: 1.4;",
         div(
           style = "margin-bottom: 8px;",
-          strong("What is HHI?"), " The Herfindahl-Hirschman Index (HHI) is a measure of market concentration. It ranges from 0 to 1, where:"
+          strong("What is HHI?"),
+          " The Herfindahl-Hirschman Index (HHI) is a measure of market concentration. It ranges from 0 to 1, where:"
         ),
         tags$ul(
           style = "margin: 8px 0; padding-left: 25px;",
-          tags$li(strong("0 (or close to 0):"), " Indicates perfect competition with many small players"),
-          tags$li(strong("Closer to 1:"), " Indicates high concentration, dominated by few players")
+          tags$li(
+            strong("0 (or close to 0):"),
+            " Indicates perfect competition with many small players"
+          ),
+          tags$li(
+            strong("Closer to 1:"),
+            " Indicates high concentration, dominated by few players"
+          )
         ),
         div(
           style = "margin-top: 8px;",
@@ -343,7 +398,10 @@ ui <- page_navbar(
     # HHI Visualization
     card(
       full_screen = TRUE,
-      card_header(textOutput("hhi_plot_title", inline = TRUE), class = "text-center"),
+      card_header(
+        textOutput("hhi_plot_title", inline = TRUE),
+        class = "text-center"
+      ),
       plotlyOutput("hhi_plot", height = "600px")
     )
   ),
@@ -358,23 +416,34 @@ ui <- page_navbar(
         title = "Listings Controls",
         width = 250,
 
-        radioButtons("share_xaxis",
-                    "X-Axis Variable:",
-                    choices = list("Powertrain" = "powertrain",
-                                 "Vehicle Type" = "vehicle_type",
-                                 "Price Bin" = "price_bin"),
-                    selected = "price_bin"),
+        radioButtons(
+          "share_xaxis",
+          "X-Axis Variable:",
+          choices = list(
+            "Powertrain" = "powertrain",
+            "Vehicle Type" = "vehicle_type",
+            "Price Bin" = "price_bin"
+          ),
+          selected = "price_bin"
+        ),
 
-        radioButtons("share_facet",
-                    "Facet Variable:",
-                    choices = list("Powertrain" = "powertrain",
-                                 "Vehicle Type" = "vehicle_type",
-                                 "Price Bin" = "price_bin"),
-                    selected = "powertrain")
+        radioButtons(
+          "share_facet",
+          "Facet Variable:",
+          choices = list(
+            "Powertrain" = "powertrain",
+            "Vehicle Type" = "vehicle_type",
+            "Price Bin" = "price_bin"
+          ),
+          selected = "powertrain"
+        )
       ),
       card(
         full_screen = TRUE,
-        card_header("Share of Listings by Variable (2018 vs 2024)", class = "text-center"),
+        card_header(
+          "Share of Listings by Variable (2018 vs 2024)",
+          class = "text-center"
+        ),
         plotlyOutput("share_plot", height = "700px")
       )
     )
@@ -390,23 +459,34 @@ ui <- page_navbar(
         title = "Dealerships Controls",
         width = 250,
 
-        radioButtons("dealer_var1",
-                    "First Variable:",
-                    choices = list("Powertrain" = "powertrain",
-                                 "Vehicle Type" = "vehicle_type",
-                                 "Price Bin" = "price_bin"),
-                    selected = "powertrain"),
+        radioButtons(
+          "dealer_var1",
+          "First Variable:",
+          choices = list(
+            "Powertrain" = "powertrain",
+            "Vehicle Type" = "vehicle_type",
+            "Price Bin" = "price_bin"
+          ),
+          selected = "powertrain"
+        ),
 
-        radioButtons("dealer_var2",
-                    "Second Variable:",
-                    choices = list("Powertrain" = "powertrain",
-                                 "Vehicle Type" = "vehicle_type",
-                                 "Price Bin" = "price_bin"),
-                    selected = "vehicle_type")
+        radioButtons(
+          "dealer_var2",
+          "Second Variable:",
+          choices = list(
+            "Powertrain" = "powertrain",
+            "Vehicle Type" = "vehicle_type",
+            "Price Bin" = "price_bin"
+          ),
+          selected = "vehicle_type"
+        )
       ),
       card(
         full_screen = TRUE,
-        card_header("Percentage of Dealerships with at Least One Vehicle", class = "text-center"),
+        card_header(
+          "Percentage of Dealerships with at Least One Vehicle",
+          class = "text-center"
+        ),
         plotlyOutput("dealer_plot", height = "700px")
       )
     )
@@ -421,7 +501,9 @@ ui <- page_navbar(
       col_widths = c(6, 6),
       card(
         card_header("Vehicle Similarity Analysis"),
-        p("This analysis shows the nearest vehicle matches based on characteristics like DVMT, fuel type, and vehicle type."),
+        p(
+          "This analysis shows the nearest vehicle matches based on characteristics like DVMT, fuel type, and vehicle type."
+        ),
         plotlyOutput("similarity_plot", height = "400px")
       ),
       card(
@@ -441,12 +523,13 @@ ui <- page_navbar(
 
 # Define Server (keeping the existing server logic)
 server <- function(input, output, session) {
-
   # Observer for Listings - update facet choices based on X-axis selection
   observeEvent(input$share_xaxis, {
-    all_choices <- list("Powertrain" = "powertrain",
-                       "Vehicle Type" = "vehicle_type",
-                       "Price Bin" = "price_bin")
+    all_choices <- list(
+      "Powertrain" = "powertrain",
+      "Vehicle Type" = "vehicle_type",
+      "Price Bin" = "price_bin"
+    )
 
     # Remove the selected X-axis variable from facet choices
     available_choices <- all_choices[all_choices != input$share_xaxis]
@@ -461,16 +544,21 @@ server <- function(input, output, session) {
       current_facet
     }
 
-    updateRadioButtons(session, "share_facet",
-                      choices = available_choices,
-                      selected = new_selection)
+    updateRadioButtons(
+      session,
+      "share_facet",
+      choices = available_choices,
+      selected = new_selection
+    )
   })
 
   # Observer for Dealerships - update var2 choices based on var1 selection
   observeEvent(input$dealer_var1, {
-    all_choices <- list("Powertrain" = "powertrain",
-                       "Vehicle Type" = "vehicle_type",
-                       "Price Bin" = "price_bin")
+    all_choices <- list(
+      "Powertrain" = "powertrain",
+      "Vehicle Type" = "vehicle_type",
+      "Price Bin" = "price_bin"
+    )
 
     # Remove the selected var1 from var2 choices
     available_choices <- all_choices[all_choices != input$dealer_var1]
@@ -485,9 +573,12 @@ server <- function(input, output, session) {
       current_var2
     }
 
-    updateRadioButtons(session, "dealer_var2",
-                      choices = available_choices,
-                      selected = new_selection)
+    updateRadioButtons(
+      session,
+      "dealer_var2",
+      choices = available_choices,
+      selected = new_selection
+    )
   })
 
   # Load VMT data
@@ -527,16 +618,36 @@ server <- function(input, output, session) {
     # Determine which datasets are relevant for the current tab
     if (current_tab == "Daily VMT") {
       # Daily VMT uses sample_data (DVMT)
-      data_available <- tryCatch({ sample_data() }, error = function(e) NULL)
+      data_available <- tryCatch(
+        {
+          sample_data()
+        },
+        error = function(e) NULL
+      )
     } else if (current_tab == "Annual VMT") {
       # Annual VMT uses mileage_data
-      data_available <- tryCatch({ mileage_data() }, error = function(e) NULL)
+      data_available <- tryCatch(
+        {
+          mileage_data()
+        },
+        error = function(e) NULL
+      )
     } else if (current_tab == "Depreciation") {
       # Depreciation uses retention_data
-      data_available <- tryCatch({ retention_data() }, error = function(e) NULL)
+      data_available <- tryCatch(
+        {
+          retention_data()
+        },
+        error = function(e) NULL
+      )
     } else {
       # For other tabs, show all available powertrains from DVMT
-      data_available <- tryCatch({ sample_data() }, error = function(e) NULL)
+      data_available <- tryCatch(
+        {
+          sample_data()
+        },
+        error = function(e) NULL
+      )
     }
 
     if (!is.null(data_available)) {
@@ -544,65 +655,95 @@ server <- function(input, output, session) {
       available_vehicle_types <- sort(unique(data_available$vehicle_type))
 
       # Update powertrain choices with clear labeling
-      powertrain_choices <- setNames(available_powertrains,
-                                   case_when(
-                                     available_powertrains == "bev" ~ "BEV",
-                                     available_powertrains == "bev_non_tesla" ~ "BEV (Non-Tesla)",
-                                     available_powertrains == "bev_tesla" ~ "BEV (Tesla)",
-                                     available_powertrains == "cv" ~ "Conventional",
-                                     available_powertrains == "diesel" ~ "Diesel",
-                                     available_powertrains == "flex" ~ "Flex Fuel",
-                                     available_powertrains == "hev" ~ "Hybrid",
-                                     available_powertrains == "phev" ~ "PHEV",
-                                     TRUE ~ str_to_title(available_powertrains)
-                                   ))
+      powertrain_choices <- setNames(
+        available_powertrains,
+        case_when(
+          available_powertrains == "bev" ~ "BEV",
+          available_powertrains == "bev_non_tesla" ~ "BEV (Non-Tesla)",
+          available_powertrains == "bev_tesla" ~ "BEV (Tesla)",
+          available_powertrains == "cv" ~ "Conventional",
+          available_powertrains == "diesel" ~ "Diesel",
+          available_powertrains == "flex" ~ "Flex Fuel",
+          available_powertrains == "hev" ~ "Hybrid",
+          available_powertrains == "phev" ~ "PHEV",
+          TRUE ~ str_to_title(available_powertrains)
+        )
+      )
 
       # Update vehicle type choices
-      vehicle_type_choices <- setNames(available_vehicle_types,
-                                     case_when(
-                                       available_vehicle_types == "car" ~ "Car",
-                                       available_vehicle_types == "cuv" ~ "CUV",
-                                       available_vehicle_types == "minivan" ~ "Minivan",
-                                       available_vehicle_types == "pickup" ~ "Pickup",
-                                       available_vehicle_types == "suv" ~ "SUV",
-                                       TRUE ~ str_to_title(available_vehicle_types)
-                                     ))
+      vehicle_type_choices <- setNames(
+        available_vehicle_types,
+        case_when(
+          available_vehicle_types == "car" ~ "Car",
+          available_vehicle_types == "cuv" ~ "CUV",
+          available_vehicle_types == "minivan" ~ "Minivan",
+          available_vehicle_types == "pickup" ~ "Pickup",
+          available_vehicle_types == "suv" ~ "SUV",
+          TRUE ~ str_to_title(available_vehicle_types)
+        )
+      )
 
       # Get currently selected values (use isolate to prevent reactive loop)
       current_fuel_selection <- isolate(input$fuel_types)
       current_vehicle_selection <- isolate(input$vehicle_types)
 
       # Keep selections that are still valid, or default if none are valid
-      new_fuel_selection <- intersect(current_fuel_selection, available_powertrains)
+      new_fuel_selection <- intersect(
+        current_fuel_selection,
+        available_powertrains
+      )
       if (length(new_fuel_selection) == 0) {
-        new_fuel_selection <- intersect(c("bev", "cv", "hev"), available_powertrains)
+        new_fuel_selection <- intersect(
+          c("bev", "cv", "hev"),
+          available_powertrains
+        )
       }
 
-      new_vehicle_selection <- intersect(current_vehicle_selection, available_vehicle_types)
+      new_vehicle_selection <- intersect(
+        current_vehicle_selection,
+        available_vehicle_types
+      )
       if (length(new_vehicle_selection) == 0) {
         new_vehicle_selection <- available_vehicle_types
       }
 
-      updateCheckboxGroupInput(session, "fuel_types",
-                              choices = powertrain_choices,
-                              selected = new_fuel_selection)
+      updateCheckboxGroupInput(
+        session,
+        "fuel_types",
+        choices = powertrain_choices,
+        selected = new_fuel_selection
+      )
 
-      updateCheckboxGroupInput(session, "vehicle_types",
-                              choices = vehicle_type_choices,
-                              selected = new_vehicle_selection)
+      updateCheckboxGroupInput(
+        session,
+        "vehicle_types",
+        choices = vehicle_type_choices,
+        selected = new_vehicle_selection
+      )
     }
 
     # Update DVMT range based on actual data (only for Daily VMT tab)
     if (current_tab == "Daily VMT") {
-      sample_data_available <- tryCatch({ sample_data() }, error = function(e) NULL)
-      if (!is.null(sample_data_available) && "dvmt" %in% colnames(sample_data_available)) {
+      sample_data_available <- tryCatch(
+        {
+          sample_data()
+        },
+        error = function(e) NULL
+      )
+      if (
+        !is.null(sample_data_available) &&
+          "dvmt" %in% colnames(sample_data_available)
+      ) {
         dvmt_min <- floor(min(sample_data_available$dvmt, na.rm = TRUE))
         dvmt_max <- ceiling(max(sample_data_available$dvmt, na.rm = TRUE))
 
-        updateSliderInput(session, "dvmt_range",
-                         min = dvmt_min,
-                         max = dvmt_max,
-                         value = c(dvmt_min, dvmt_max))
+        updateSliderInput(
+          session,
+          "dvmt_range",
+          min = dvmt_min,
+          max = dvmt_max,
+          value = c(dvmt_min, dvmt_max)
+        )
       }
     }
   })
@@ -636,7 +777,7 @@ server <- function(input, output, session) {
 
     return(data)
   })
-  
+
   # Load retention rate data (prediction-based)
   retention_data <- reactive({
     # Try multiple potential data paths
@@ -812,7 +953,7 @@ server <- function(input, output, session) {
     }
 
     if (is.null(data_path)) {
-      return(NULL)  # Return NULL if file not found
+      return(NULL) # Return NULL if file not found
     }
 
     df <- read_parquet(data_path)
@@ -839,7 +980,7 @@ server <- function(input, output, session) {
     }
 
     if (is.null(data_path)) {
-      return(NULL)  # Return NULL if file not found
+      return(NULL) # Return NULL if file not found
     }
 
     df <- read_parquet(data_path)
@@ -906,7 +1047,9 @@ server <- function(input, output, session) {
     data <- sample_data()
 
     # Ensure input values exist and are valid
-    fuel_types <- if(is.null(input$fuel_types) || length(input$fuel_types) == 0) {
+    fuel_types <- if (
+      is.null(input$fuel_types) || length(input$fuel_types) == 0
+    ) {
       unique(data$powertrain)
     } else {
       input$fuel_types
@@ -916,81 +1059,91 @@ server <- function(input, output, session) {
     # Just filter directly with the selected values
     fuel_types <- intersect(fuel_types, unique(data$powertrain))
 
-    vehicle_types <- if(is.null(input$vehicle_types) || length(input$vehicle_types) == 0) {
+    vehicle_types <- if (
+      is.null(input$vehicle_types) || length(input$vehicle_types) == 0
+    ) {
       unique(data$vehicle_type)
     } else {
       input$vehicle_types
     }
 
-    dvmt_range <- if(is.null(input$dvmt_range)) {
+    dvmt_range <- if (is.null(input$dvmt_range)) {
       c(0, max(data$dvmt, na.rm = TRUE))
     } else {
       input$dvmt_range
     }
 
     data <- data %>%
-      filter(powertrain %in% fuel_types,
-             vehicle_type %in% vehicle_types,
-             dvmt >= dvmt_range[1],
-             dvmt <= dvmt_range[2])
+      filter(
+        powertrain %in% fuel_types,
+        vehicle_type %in% vehicle_types,
+        dvmt >= dvmt_range[1],
+        dvmt <= dvmt_range[2]
+      )
 
     return(data)
   })
-  
+
   # Filtered mileage data based on user inputs
   filtered_mileage_data <- reactive({
     data <- mileage_data()
 
     # Ensure input values exist and are valid
-    fuel_types <- if(is.null(input$fuel_types) || length(input$fuel_types) == 0) {
+    fuel_types <- if (
+      is.null(input$fuel_types) || length(input$fuel_types) == 0
+    ) {
       unique(data$powertrain)
     } else {
       input$fuel_types
     }
 
     # Map BEV subtypes for mileage data (which only has "bev", not subtypes)
-    if(any(c("bev_tesla", "bev_non_tesla") %in% fuel_types)) {
+    if (any(c("bev_tesla", "bev_non_tesla") %in% fuel_types)) {
       fuel_types <- c(fuel_types, "bev")
     }
     fuel_types <- intersect(fuel_types, c("bev", "cv", "diesel", "hev", "phev"))
 
-    vehicle_types <- if(is.null(input$vehicle_types) || length(input$vehicle_types) == 0) {
+    vehicle_types <- if (
+      is.null(input$vehicle_types) || length(input$vehicle_types) == 0
+    ) {
       unique(data$vehicle_type)
     } else {
       input$vehicle_types
     }
 
     data %>%
-      filter(powertrain %in% fuel_types,
-             vehicle_type %in% vehicle_types)
+      filter(powertrain %in% fuel_types, vehicle_type %in% vehicle_types)
   })
-  
+
   # Filtered retention data based on user inputs
   filtered_retention_data <- reactive({
     data <- retention_data()
 
     # Ensure input values exist and are valid
-    fuel_types <- if(is.null(input$fuel_types) || length(input$fuel_types) == 0) {
+    fuel_types <- if (
+      is.null(input$fuel_types) || length(input$fuel_types) == 0
+    ) {
       unique(data$powertrain)
     } else {
       input$fuel_types
     }
 
     # Map BEV subtypes for retention data (which only has "bev", not subtypes)
-    if(any(c("bev_tesla", "bev_non_tesla") %in% fuel_types)) {
+    if (any(c("bev_tesla", "bev_non_tesla") %in% fuel_types)) {
       fuel_types <- c(fuel_types, "bev")
     }
     fuel_types <- intersect(fuel_types, c("bev", "cv", "hev", "phev"))
 
-    vehicle_types <- if(is.null(input$vehicle_types) || length(input$vehicle_types) == 0) {
+    vehicle_types <- if (
+      is.null(input$vehicle_types) || length(input$vehicle_types) == 0
+    ) {
       unique(data$vehicle_type)
     } else {
       input$vehicle_types
     }
 
     data %>%
-      filter(powertrain %in% fuel_types,
-             vehicle_type %in% vehicle_types)
+      filter(powertrain %in% fuel_types, vehicle_type %in% vehicle_types)
   })
 
   # Filtered make-model mileage data
@@ -1002,27 +1155,30 @@ server <- function(input, output, session) {
     }
 
     # Ensure input values exist and are valid
-    fuel_types <- if(is.null(input$fuel_types) || length(input$fuel_types) == 0) {
+    fuel_types <- if (
+      is.null(input$fuel_types) || length(input$fuel_types) == 0
+    ) {
       unique(data$powertrain)
     } else {
       input$fuel_types
     }
 
     # Map BEV subtypes
-    if(any(c("bev_tesla", "bev_non_tesla") %in% fuel_types)) {
+    if (any(c("bev_tesla", "bev_non_tesla") %in% fuel_types)) {
       fuel_types <- c(fuel_types, "bev")
     }
     fuel_types <- intersect(fuel_types, unique(data$powertrain))
 
-    vehicle_types <- if(is.null(input$vehicle_types) || length(input$vehicle_types) == 0) {
+    vehicle_types <- if (
+      is.null(input$vehicle_types) || length(input$vehicle_types) == 0
+    ) {
       unique(data$vehicle_type)
     } else {
       input$vehicle_types
     }
 
     data %>%
-      filter(powertrain %in% fuel_types,
-             vehicle_type %in% vehicle_types)
+      filter(powertrain %in% fuel_types, vehicle_type %in% vehicle_types)
   })
 
   # Filtered make-model retention data
@@ -1034,56 +1190,72 @@ server <- function(input, output, session) {
     }
 
     # Ensure input values exist and are valid
-    fuel_types <- if(is.null(input$fuel_types) || length(input$fuel_types) == 0) {
+    fuel_types <- if (
+      is.null(input$fuel_types) || length(input$fuel_types) == 0
+    ) {
       unique(data$powertrain)
     } else {
       input$fuel_types
     }
 
     # Map BEV subtypes
-    if(any(c("bev_tesla", "bev_non_tesla") %in% fuel_types)) {
+    if (any(c("bev_tesla", "bev_non_tesla") %in% fuel_types)) {
       fuel_types <- c(fuel_types, "bev")
     }
     fuel_types <- intersect(fuel_types, unique(data$powertrain))
 
-    vehicle_types <- if(is.null(input$vehicle_types) || length(input$vehicle_types) == 0) {
+    vehicle_types <- if (
+      is.null(input$vehicle_types) || length(input$vehicle_types) == 0
+    ) {
       unique(data$vehicle_type)
     } else {
       input$vehicle_types
     }
 
     # Filter by age range if applicable
-    age_min <- if(!is.null(input$age_range)) input$age_range[1] else 1
-    age_max <- if(!is.null(input$age_range)) input$age_range[2] else 9
+    age_min <- if (!is.null(input$age_range)) input$age_range[1] else 1
+    age_max <- if (!is.null(input$age_range)) input$age_range[2] else 9
 
     data %>%
-      filter(powertrain %in% fuel_types,
-             vehicle_type %in% vehicle_types,
-             age_years >= age_min,
-             age_years <= age_max)
+      filter(
+        powertrain %in% fuel_types,
+        vehicle_type %in% vehicle_types,
+        age_years >= age_min,
+        age_years <= age_max
+      )
   })
 
   mileage_plot_context <- reactive({
     data <- filtered_mileage_data()
 
-    if(is.null(data) || nrow(data) == 0) {
-      return(list(status = "empty", message = "No data matches current filters"))
+    if (is.null(data) || nrow(data) == 0) {
+      return(list(
+        status = "empty",
+        message = "No data matches current filters"
+      ))
     }
 
     required_cols <- c("age_years", "mileage_predicted", "coef")
     missing_cols <- setdiff(required_cols, names(data))
-    if(length(missing_cols) > 0) {
-      return(list(status = "error", message = "Mileage data missing required columns"))
+    if (length(missing_cols) > 0) {
+      return(list(
+        status = "error",
+        message = "Mileage data missing required columns"
+      ))
     }
 
     # Filter for age > 2 years
     data <- data %>%
       filter(age_years > 2)
 
-    age_min <- if(!is.null(input$age_range)) max(2, input$age_range[1]) else 2
-    age_max <- if(!is.null(input$age_range)) input$age_range[2] else 8
-    show_bands <- FALSE  # No confidence bands in prediction data
-    selected_category <- if(!is.null(input$comparison_category)) input$comparison_category else "powertrain"
+    age_min <- if (!is.null(input$age_range)) max(2, input$age_range[1]) else 2
+    age_max <- if (!is.null(input$age_range)) input$age_range[2] else 8
+    show_bands <- FALSE # No confidence bands in prediction data
+    selected_category <- if (!is.null(input$comparison_category)) {
+      input$comparison_category
+    } else {
+      "powertrain"
+    }
 
     data <- data %>%
       filter(
@@ -1092,11 +1264,14 @@ server <- function(input, output, session) {
         !is.na(mileage_predicted)
       )
 
-    if(nrow(data) == 0) {
-      return(list(status = "empty", message = "No data matches current filters"))
+    if (nrow(data) == 0) {
+      return(list(
+        status = "empty",
+        message = "No data matches current filters"
+      ))
     }
 
-    if(selected_category == "powertrain") {
+    if (selected_category == "powertrain") {
       aggregated <- data %>%
         group_by(powertrain, vehicle_type, age_years) %>%
         summarise(
@@ -1122,8 +1297,13 @@ server <- function(input, output, session) {
       secondary <- sort(unique(aggregated$powertrain))
     }
 
-    if(nrow(aggregated) == 0 || length(categories) == 0 || length(secondary) == 0) {
-      return(list(status = "empty", message = "No data matches current filters"))
+    if (
+      nrow(aggregated) == 0 || length(categories) == 0 || length(secondary) == 0
+    ) {
+      return(list(
+        status = "empty",
+        message = "No data matches current filters"
+      ))
     }
 
     list(
@@ -1143,19 +1323,37 @@ server <- function(input, output, session) {
   retention_plot_context <- reactive({
     data <- filtered_retention_data()
 
-    if(is.null(data) || nrow(data) == 0) {
-      return(list(status = "empty", message = "No data matches current filters"))
+    if (is.null(data) || nrow(data) == 0) {
+      return(list(
+        status = "empty",
+        message = "No data matches current filters"
+      ))
     }
 
     required_cols <- c("age_years", "rr_predicted")
     missing_cols <- setdiff(required_cols, names(data))
-    if(length(missing_cols) > 0) {
-      return(list(status = "error", message = "Retention data missing required columns"))
+    if (length(missing_cols) > 0) {
+      return(list(
+        status = "error",
+        message = "Retention data missing required columns"
+      ))
     }
 
-    age_min <- if(!is.null(input$depreciation_age_range)) input$depreciation_age_range[1] else 1
-    age_max <- if(!is.null(input$depreciation_age_range)) input$depreciation_age_range[2] else 8
-    selected_category <- if(!is.null(input$depreciation_category)) input$depreciation_category else "powertrain"
+    age_min <- if (!is.null(input$depreciation_age_range)) {
+      input$depreciation_age_range[1]
+    } else {
+      1
+    }
+    age_max <- if (!is.null(input$depreciation_age_range)) {
+      input$depreciation_age_range[2]
+    } else {
+      8
+    }
+    selected_category <- if (!is.null(input$depreciation_category)) {
+      input$depreciation_category
+    } else {
+      "powertrain"
+    }
 
     data <- data %>%
       filter(
@@ -1164,11 +1362,14 @@ server <- function(input, output, session) {
         !is.na(rr_predicted)
       )
 
-    if(nrow(data) == 0) {
-      return(list(status = "empty", message = "No data matches current filters"))
+    if (nrow(data) == 0) {
+      return(list(
+        status = "empty",
+        message = "No data matches current filters"
+      ))
     }
 
-    if(selected_category == "powertrain") {
+    if (selected_category == "powertrain") {
       aggregated <- data %>%
         group_by(powertrain, vehicle_type, age_years) %>%
         summarise(
@@ -1192,8 +1393,13 @@ server <- function(input, output, session) {
       secondary <- sort(unique(aggregated$powertrain))
     }
 
-    if(nrow(aggregated) == 0 || length(categories) == 0 || length(secondary) == 0) {
-      return(list(status = "empty", message = "No data matches current filters"))
+    if (
+      nrow(aggregated) == 0 || length(categories) == 0 || length(secondary) == 0
+    ) {
+      return(list(
+        status = "empty",
+        message = "No data matches current filters"
+      ))
     }
 
     list(
@@ -1208,446 +1414,555 @@ server <- function(input, output, session) {
       selected_category = selected_category
     )
   })
-  
+
   # Main Plot (CDF/PDF/Histogram) - Pure Plotly with Subplots
-# Daily VMT Plot - Fully Interactive
+  # Daily VMT Plot - Fully Interactive
 
-output$cdf_plot <- renderPlotly({
-  tryCatch({
-    data <- filtered_data()
+  output$cdf_plot <- renderPlotly({
+    tryCatch(
+      {
+        data <- filtered_data()
 
-    if(nrow(data) == 0) {
-      return(plot_ly() %>%
-               add_annotations(text = "No data available for selected filters",
-                             xref = "paper", yref = "paper",
-                             x = 0.5, y = 0.5, showarrow = FALSE))
-    }
-
-    # Ensure we have valid data columns
-    if(!"dvmt" %in% colnames(data) || !"quantile" %in% colnames(data)) {
-      return(plot_ly() %>%
-               add_annotations(text = "Missing required columns in data",
-                             xref = "paper", yref = "paper",
-                             x = 0.5, y = 0.5, showarrow = FALSE))
-    }
-
-    # Remove any NA values
-    data <- data %>%
-      filter(!is.na(dvmt), !is.na(quantile), !is.na(powertrain), !is.na(vehicle_type))
-
-    if(nrow(data) == 0) {
-      return(plot_ly() %>%
-               add_annotations(text = "No valid data after cleaning",
-                             xref = "paper", yref = "paper",
-                             x = 0.5, y = 0.5, showarrow = FALSE))
-    }
-
-    # Get plot type from input (default to CDF)
-    plot_type <- if(is.null(input$plot_type)) "cdf" else input$plot_type
-
-    # Get unique powertrains for faceting
-    powertrains <- unique(data$powertrain)
-    vehicle_types <- unique(data$vehicle_type)
-
-    # Create color palette
-    colors <- viridisLite::viridis(length(vehicle_types))
-    color_map <- setNames(colors, vehicle_types)
-
-    if(plot_type == "cdf") {
-      # Create subplots for each powertrain
-      plots <- lapply(powertrains, function(pt) {
-        pt_data <- data %>% filter(powertrain == pt)
-
-        p <- plot_ly()
-
-        for(vt in vehicle_types) {
-          vt_data <- pt_data %>% filter(vehicle_type == vt)
-          if(nrow(vt_data) > 0) {
-            p <- p %>%
-              add_trace(
-                data = vt_data,
-                x = ~dvmt,
-                y = ~quantile,
-                type = 'scatter',
-                mode = 'lines',
-                name = vt,
-                line = list(color = color_map[vt], width = 2.5),
-                hovertemplate = paste0(
-                  "<b>", vt, "</b><br>",
-                  "DVMT: %{x:.1f} miles<br>",
-                  "Quantile: %{y:.1%}<br>",
-                  "<extra></extra>"
-                ),
-                showlegend = (pt == powertrains[1])
+        if (nrow(data) == 0) {
+          return(
+            plot_ly() %>%
+              add_annotations(
+                text = "No data available for selected filters",
+                xref = "paper",
+                yref = "paper",
+                x = 0.5,
+                y = 0.5,
+                showarrow = FALSE
               )
-          }
+          )
         }
 
-        # Add aggregated line if requested
-        if(!is.null(input$show_aggregated) && input$show_aggregated && length(vehicle_types) > 1) {
-          # Compute aggregated CDF across all vehicle types
-          agg_data <- pt_data %>%
-            group_by(dvmt) %>%
-            summarise(quantile = mean(quantile, na.rm = TRUE), .groups = "drop") %>%
-            arrange(dvmt)
-
-          if(nrow(agg_data) > 0) {
-            p <- p %>%
-              add_trace(
-                data = agg_data,
-                x = ~dvmt,
-                y = ~quantile,
-                type = 'scatter',
-                mode = 'lines',
-                name = 'Aggregated',
-                line = list(color = 'black', width = 3, dash = 'dash'),
-                hovertemplate = paste0(
-                  "<b>Aggregated</b><br>",
-                  "DVMT: %{x:.1f} miles<br>",
-                  "Quantile: %{y:.1%}<br>",
-                  "<extra></extra>"
-                ),
-                showlegend = (pt == powertrains[1])
+        # Ensure we have valid data columns
+        if (!"dvmt" %in% colnames(data) || !"quantile" %in% colnames(data)) {
+          return(
+            plot_ly() %>%
+              add_annotations(
+                text = "Missing required columns in data",
+                xref = "paper",
+                yref = "paper",
+                x = 0.5,
+                y = 0.5,
+                showarrow = FALSE
               )
-          }
+          )
         }
 
-        p <- p %>%
-          layout(
-            xaxis = list(
-              title = list(text = "DVMT", font = list(size = 13, family = "Inter")),
-              gridcolor = "#e9ecef",
-              showline = TRUE,
-              linecolor = "#dee2e6"
-            ),
-            yaxis = list(
-              title = list(text = "Cumulative Probability", font = list(size = 13, family = "Inter")),
-              gridcolor = "#e9ecef",
-              showline = TRUE,
-              linecolor = "#dee2e6"
-            ),
-            plot_bgcolor = "#fafbfc",
-            paper_bgcolor = "#ffffff",
-            annotations = list(
-              x = 0.5, y = 1.08,
-              text = paste("<b>", toupper(pt), "</b>"),
-              xref = "paper", yref = "paper",
-              showarrow = FALSE,
-              font = list(size = 14, family = "Inter", color = "#2c3e50")
-            )
+        # Remove any NA values
+        data <- data %>%
+          filter(
+            !is.na(dvmt),
+            !is.na(quantile),
+            !is.na(powertrain),
+            !is.na(vehicle_type)
           )
 
-        return(p)
-      })
-
-      # Combine into subplot with 3 columns for better aspect ratio
-      fig <- subplot(plots, nrows = ceiling(length(powertrains)/3),
-                    shareX = FALSE, shareY = TRUE, titleX = TRUE, titleY = TRUE,
-                    margin = 0.06) %>%
-        layout(
-          title = list(
-            text = "<b>Cumulative Distribution Function (CDF) of Daily VMT</b><br><sub style='color:#6c757d;'>Distribution of daily vehicle miles traveled by powertrain and vehicle type</sub>",
-            font = list(size = 18, family = "Inter", color = "#2c3e50")
-          ),
-          hovermode = 'closest',
-          showlegend = TRUE,
-          legend = list(
-            orientation = "h",
-            x = 0.5,
-            xanchor = "center",
-            y = -0.12,
-            bgcolor = "rgba(255,255,255,0.9)",
-            bordercolor = "#dee2e6",
-            borderwidth = 1,
-            font = list(size = 12, family = "Inter")
-          ),
-          margin = list(t = 100, b = 80, l = 60, r = 40),
-          paper_bgcolor = "#ffffff",
-          plot_bgcolor = "#fafbfc"
-        ) %>%
-        config(
-          displayModeBar = TRUE,
-          displaylogo = FALSE,
-          modeBarButtonsToRemove = c('lasso2d', 'select2d', 'autoScale2d'),
-          toImageButtonOptions = list(
-            format = 'png',
-            filename = 'dvmt_cdf_plot',
-            height = 1200,
-            width = 1800,
-            scale = 2
-          )
-        )
-
-      return(fig)
-
-    } else if(plot_type == "pdf") {
-      # PDF: Compute density from quantile data
-      plots <- lapply(powertrains, function(pt) {
-        pt_data <- data %>% filter(powertrain == pt)
-
-        p <- plot_ly()
-
-        for(vt in vehicle_types) {
-          vt_data <- pt_data %>%
-            filter(vehicle_type == vt) %>%
-            arrange(dvmt)
-
-          if(nrow(vt_data) > 1) {
-            # Compute PDF as derivative of CDF
-            pdf_data <- vt_data %>%
-              mutate(
-                pdf = c(diff(quantile) / diff(dvmt), NA)
-              ) %>%
-              filter(!is.na(pdf), pdf >= 0)
-
-            if(nrow(pdf_data) > 0) {
-              p <- p %>%
-                add_trace(
-                  data = pdf_data,
-                  x = ~dvmt,
-                  y = ~pdf,
-                  type = 'scatter',
-                  mode = 'lines',
-                  name = vt,
-                  line = list(color = color_map[vt], width = 2),
-                  fill = 'tozeroy',
-                  fillcolor = paste0(substr(color_map[vt], 1, 7), "30"),
-                  hovertemplate = paste0(
-                    "<b>", vt, "</b><br>",
-                    "DVMT: %{x:.1f} miles<br>",
-                    "Density: %{y:.4f}<br>",
-                    "<extra></extra>"
-                  ),
-                  showlegend = (pt == powertrains[1])
-                )
-            }
-          }
-        }
-
-        # Add aggregated line if requested
-        if(!is.null(input$show_aggregated) && input$show_aggregated && length(vehicle_types) > 1) {
-          # Compute aggregated PDF across all vehicle types
-          agg_cdf <- pt_data %>%
-            group_by(dvmt) %>%
-            summarise(quantile = mean(quantile, na.rm = TRUE), .groups = "drop") %>%
-            arrange(dvmt)
-
-          if(nrow(agg_cdf) > 1) {
-            agg_pdf <- agg_cdf %>%
-              mutate(
-                pdf = c(diff(quantile) / diff(dvmt), NA)
-              ) %>%
-              filter(!is.na(pdf), pdf >= 0)
-
-            if(nrow(agg_pdf) > 0) {
-              p <- p %>%
-                add_trace(
-                  data = agg_pdf,
-                  x = ~dvmt,
-                  y = ~pdf,
-                  type = 'scatter',
-                  mode = 'lines',
-                  name = 'Aggregated',
-                  line = list(color = 'black', width = 3, dash = 'dash'),
-                  hovertemplate = paste0(
-                    "<b>Aggregated</b><br>",
-                    "DVMT: %{x:.1f} miles<br>",
-                    "Density: %{y:.4f}<br>",
-                    "<extra></extra>"
-                  ),
-                  showlegend = (pt == powertrains[1])
-                )
-            }
-          }
-        }
-
-        p <- p %>%
-          layout(
-            xaxis = list(title = "DVMT"),
-            yaxis = list(title = "Probability Density"),
-            annotations = list(
-              x = 0.5, y = 1.05,
-              text = paste("<b>", toupper(pt), "</b>"),
-              xref = "paper", yref = "paper",
-              showarrow = FALSE,
-              font = list(size = 12)
-            )
-          )
-
-        return(p)
-      })
-
-      fig <- subplot(plots, nrows = ceiling(length(powertrains)/3),
-                    shareX = FALSE, shareY = FALSE, titleX = TRUE, titleY = TRUE) %>%
-        layout(
-          title = list(
-            text = "<b>Probability Density Function (PDF) of Daily VMT</b><br><sub>Density distribution of daily vehicle miles traveled</sub>",
-            font = list(size = 16)
-          ),
-          hovermode = 'closest',
-          showlegend = TRUE,
-          legend = list(
-            orientation = "h",
-            x = 0.5,
-            xanchor = "center",
-            y = -0.15
-          )
-        ) %>%
-        config(
-          displayModeBar = TRUE,
-          modeBarButtonsToRemove = c('lasso2d', 'select2d'),
-          toImageButtonOptions = list(format = 'png', filename = 'dvmt_pdf_plot')
-        )
-
-      return(fig)
-
-    } else if(plot_type == "hist") {
-      # Histogram: Create binned counts
-      plots <- lapply(powertrains, function(pt) {
-        pt_data <- data %>% filter(powertrain == pt)
-
-        p <- plot_ly()
-
-        for(vt in vehicle_types) {
-          vt_data <- pt_data %>% filter(vehicle_type == vt)
-
-          if(nrow(vt_data) > 0) {
-            p <- p %>%
-              add_trace(
-                data = vt_data,
-                x = ~dvmt,
-                type = 'histogram',
-                name = vt,
-                marker = list(
-                  color = color_map[vt],
-                  line = list(color = 'white', width = 1)
-                ),
-                opacity = 0.7,
-                hovertemplate = paste0(
-                  "<b>", vt, "</b><br>",
-                  "DVMT: %{x}<br>",
-                  "Count: %{y}<br>",
-                  "<extra></extra>"
-                ),
-                showlegend = (pt == powertrains[1])
+        if (nrow(data) == 0) {
+          return(
+            plot_ly() %>%
+              add_annotations(
+                text = "No valid data after cleaning",
+                xref = "paper",
+                yref = "paper",
+                x = 0.5,
+                y = 0.5,
+                showarrow = FALSE
               )
-          }
+          )
         }
 
-        # Add aggregated density line if requested
-        if(!is.null(input$show_aggregated) && input$show_aggregated && length(vehicle_types) > 1) {
-          # Compute aggregated density from all vehicle types
-          agg_data <- pt_data %>%
-            group_by(dvmt) %>%
-            summarise(quantile = mean(quantile, na.rm = TRUE), .groups = "drop") %>%
-            arrange(dvmt)
+        # Get plot type from input (default to CDF)
+        plot_type <- if (is.null(input$plot_type)) "cdf" else input$plot_type
 
-          if(nrow(agg_data) > 1) {
-            # Compute density from CDF
-            agg_pdf <- agg_data %>%
-              mutate(
-                pdf = c(diff(quantile) / diff(dvmt), NA)
-              ) %>%
-              filter(!is.na(pdf), pdf >= 0)
+        # Get unique powertrains for faceting
+        powertrains <- unique(data$powertrain)
+        vehicle_types <- unique(data$vehicle_type)
 
-            if(nrow(agg_pdf) > 0) {
-              # Scale PDF to histogram counts (approximate)
-              max_pdf <- max(agg_pdf$pdf, na.rm = TRUE)
-              if(max_pdf > 0) {
-                # Normalize to a reasonable scale
-                scale_factor <- nrow(pt_data) * (max(pt_data$dvmt) - min(pt_data$dvmt)) / 30
-                agg_pdf <- agg_pdf %>%
-                  mutate(pdf_scaled = pdf * scale_factor)
+        # Create color palette
+        colors <- viridisLite::viridis(length(vehicle_types))
+        color_map <- setNames(colors, vehicle_types)
 
+        if (plot_type == "cdf") {
+          # Create subplots for each powertrain
+          plots <- lapply(powertrains, function(pt) {
+            pt_data <- data %>% filter(powertrain == pt)
+
+            p <- plot_ly()
+
+            for (vt in vehicle_types) {
+              vt_data <- pt_data %>% filter(vehicle_type == vt)
+              if (nrow(vt_data) > 0) {
                 p <- p %>%
                   add_trace(
-                    data = agg_pdf,
+                    data = vt_data,
                     x = ~dvmt,
-                    y = ~pdf_scaled,
+                    y = ~quantile,
                     type = 'scatter',
                     mode = 'lines',
-                    name = 'Aggregated',
-                    line = list(color = 'black', width = 3, dash = 'dash'),
-                    yaxis = 'y2',
+                    name = vt,
+                    line = list(color = color_map[vt], width = 2.5),
                     hovertemplate = paste0(
-                      "<b>Aggregated Density</b><br>",
+                      "<b>",
+                      vt,
+                      "</b><br>",
                       "DVMT: %{x:.1f} miles<br>",
-                      "Density: %{y:.2f}<br>",
+                      "Quantile: %{y:.1%}<br>",
                       "<extra></extra>"
                     ),
                     showlegend = (pt == powertrains[1])
                   )
               }
             }
-          }
+
+            # Add aggregated line if requested
+            if (
+              !is.null(input$show_aggregated) &&
+                input$show_aggregated &&
+                length(vehicle_types) > 1
+            ) {
+              # Compute aggregated CDF across all vehicle types
+              agg_data <- pt_data %>%
+                group_by(dvmt) %>%
+                summarise(
+                  quantile = mean(quantile, na.rm = TRUE),
+                  .groups = "drop"
+                ) %>%
+                arrange(dvmt)
+
+              if (nrow(agg_data) > 0) {
+                p <- p %>%
+                  add_trace(
+                    data = agg_data,
+                    x = ~dvmt,
+                    y = ~quantile,
+                    type = 'scatter',
+                    mode = 'lines',
+                    name = 'Aggregated',
+                    line = list(color = 'black', width = 3, dash = 'dash'),
+                    hovertemplate = paste0(
+                      "<b>Aggregated</b><br>",
+                      "DVMT: %{x:.1f} miles<br>",
+                      "Quantile: %{y:.1%}<br>",
+                      "<extra></extra>"
+                    ),
+                    showlegend = (pt == powertrains[1])
+                  )
+              }
+            }
+
+            p <- p %>%
+              layout(
+                xaxis = list(
+                  title = list(
+                    text = "DVMT",
+                    font = list(size = 13, family = "Inter")
+                  ),
+                  gridcolor = "#e9ecef",
+                  showline = TRUE,
+                  linecolor = "#dee2e6"
+                ),
+                yaxis = list(
+                  title = list(
+                    text = "Cumulative Probability",
+                    font = list(size = 13, family = "Inter")
+                  ),
+                  gridcolor = "#e9ecef",
+                  showline = TRUE,
+                  linecolor = "#dee2e6"
+                ),
+                plot_bgcolor = "#fafbfc",
+                paper_bgcolor = "#ffffff",
+                annotations = list(
+                  x = 0.5,
+                  y = 1.08,
+                  text = paste("<b>", toupper(pt), "</b>"),
+                  xref = "paper",
+                  yref = "paper",
+                  showarrow = FALSE,
+                  font = list(size = 14, family = "Inter", color = "#2c3e50")
+                )
+              )
+
+            return(p)
+          })
+
+          # Combine into subplot with 3 columns for better aspect ratio
+          fig <- subplot(
+            plots,
+            nrows = ceiling(length(powertrains) / 3),
+            shareX = FALSE,
+            shareY = TRUE,
+            titleX = TRUE,
+            titleY = TRUE,
+            margin = 0.06
+          ) %>%
+            layout(
+              title = list(
+                text = "<b>Cumulative Distribution Function (CDF) of Daily VMT</b><br><sub style='color:#6c757d;'>Distribution of daily vehicle miles traveled by powertrain and vehicle type</sub>",
+                font = list(size = 18, family = "Inter", color = "#2c3e50")
+              ),
+              hovermode = 'closest',
+              showlegend = TRUE,
+              legend = list(
+                orientation = "h",
+                x = 0.5,
+                xanchor = "center",
+                y = -0.12,
+                bgcolor = "rgba(255,255,255,0.9)",
+                bordercolor = "#dee2e6",
+                borderwidth = 1,
+                font = list(size = 12, family = "Inter")
+              ),
+              margin = list(t = 100, b = 80, l = 60, r = 40),
+              paper_bgcolor = "#ffffff",
+              plot_bgcolor = "#fafbfc"
+            ) %>%
+            config(
+              displayModeBar = TRUE,
+              displaylogo = FALSE,
+              modeBarButtonsToRemove = c('lasso2d', 'select2d', 'autoScale2d'),
+              toImageButtonOptions = list(
+                format = 'png',
+                filename = 'dvmt_cdf_plot',
+                height = 1200,
+                width = 1800,
+                scale = 2
+              )
+            )
+
+          return(fig)
+        } else if (plot_type == "pdf") {
+          # PDF: Compute density from quantile data
+          plots <- lapply(powertrains, function(pt) {
+            pt_data <- data %>% filter(powertrain == pt)
+
+            p <- plot_ly()
+
+            for (vt in vehicle_types) {
+              vt_data <- pt_data %>%
+                filter(vehicle_type == vt) %>%
+                arrange(dvmt)
+
+              if (nrow(vt_data) > 1) {
+                # Compute PDF as derivative of CDF
+                pdf_data <- vt_data %>%
+                  mutate(
+                    pdf = c(diff(quantile) / diff(dvmt), NA)
+                  ) %>%
+                  filter(!is.na(pdf), pdf >= 0)
+
+                if (nrow(pdf_data) > 0) {
+                  p <- p %>%
+                    add_trace(
+                      data = pdf_data,
+                      x = ~dvmt,
+                      y = ~pdf,
+                      type = 'scatter',
+                      mode = 'lines',
+                      name = vt,
+                      line = list(color = color_map[vt], width = 2),
+                      fill = 'tozeroy',
+                      fillcolor = paste0(substr(color_map[vt], 1, 7), "30"),
+                      hovertemplate = paste0(
+                        "<b>",
+                        vt,
+                        "</b><br>",
+                        "DVMT: %{x:.1f} miles<br>",
+                        "Density: %{y:.4f}<br>",
+                        "<extra></extra>"
+                      ),
+                      showlegend = (pt == powertrains[1])
+                    )
+                }
+              }
+            }
+
+            # Add aggregated line if requested
+            if (
+              !is.null(input$show_aggregated) &&
+                input$show_aggregated &&
+                length(vehicle_types) > 1
+            ) {
+              # Compute aggregated PDF across all vehicle types
+              agg_cdf <- pt_data %>%
+                group_by(dvmt) %>%
+                summarise(
+                  quantile = mean(quantile, na.rm = TRUE),
+                  .groups = "drop"
+                ) %>%
+                arrange(dvmt)
+
+              if (nrow(agg_cdf) > 1) {
+                agg_pdf <- agg_cdf %>%
+                  mutate(
+                    pdf = c(diff(quantile) / diff(dvmt), NA)
+                  ) %>%
+                  filter(!is.na(pdf), pdf >= 0)
+
+                if (nrow(agg_pdf) > 0) {
+                  p <- p %>%
+                    add_trace(
+                      data = agg_pdf,
+                      x = ~dvmt,
+                      y = ~pdf,
+                      type = 'scatter',
+                      mode = 'lines',
+                      name = 'Aggregated',
+                      line = list(color = 'black', width = 3, dash = 'dash'),
+                      hovertemplate = paste0(
+                        "<b>Aggregated</b><br>",
+                        "DVMT: %{x:.1f} miles<br>",
+                        "Density: %{y:.4f}<br>",
+                        "<extra></extra>"
+                      ),
+                      showlegend = (pt == powertrains[1])
+                    )
+                }
+              }
+            }
+
+            p <- p %>%
+              layout(
+                xaxis = list(title = "DVMT"),
+                yaxis = list(title = "Probability Density"),
+                annotations = list(
+                  x = 0.5,
+                  y = 1.05,
+                  text = paste("<b>", toupper(pt), "</b>"),
+                  xref = "paper",
+                  yref = "paper",
+                  showarrow = FALSE,
+                  font = list(size = 12)
+                )
+              )
+
+            return(p)
+          })
+
+          fig <- subplot(
+            plots,
+            nrows = ceiling(length(powertrains) / 3),
+            shareX = FALSE,
+            shareY = FALSE,
+            titleX = TRUE,
+            titleY = TRUE
+          ) %>%
+            layout(
+              title = list(
+                text = "<b>Probability Density Function (PDF) of Daily VMT</b><br><sub>Density distribution of daily vehicle miles traveled</sub>",
+                font = list(size = 16)
+              ),
+              hovermode = 'closest',
+              showlegend = TRUE,
+              legend = list(
+                orientation = "h",
+                x = 0.5,
+                xanchor = "center",
+                y = -0.15
+              )
+            ) %>%
+            config(
+              displayModeBar = TRUE,
+              modeBarButtonsToRemove = c('lasso2d', 'select2d'),
+              toImageButtonOptions = list(
+                format = 'png',
+                filename = 'dvmt_pdf_plot'
+              )
+            )
+
+          return(fig)
+        } else if (plot_type == "hist") {
+          # Histogram: Create binned counts
+          plots <- lapply(powertrains, function(pt) {
+            pt_data <- data %>% filter(powertrain == pt)
+
+            p <- plot_ly()
+
+            for (vt in vehicle_types) {
+              vt_data <- pt_data %>% filter(vehicle_type == vt)
+
+              if (nrow(vt_data) > 0) {
+                p <- p %>%
+                  add_trace(
+                    data = vt_data,
+                    x = ~dvmt,
+                    type = 'histogram',
+                    name = vt,
+                    marker = list(
+                      color = color_map[vt],
+                      line = list(color = 'white', width = 1)
+                    ),
+                    opacity = 0.7,
+                    hovertemplate = paste0(
+                      "<b>",
+                      vt,
+                      "</b><br>",
+                      "DVMT: %{x}<br>",
+                      "Count: %{y}<br>",
+                      "<extra></extra>"
+                    ),
+                    showlegend = (pt == powertrains[1])
+                  )
+              }
+            }
+
+            # Add aggregated density line if requested
+            if (
+              !is.null(input$show_aggregated) &&
+                input$show_aggregated &&
+                length(vehicle_types) > 1
+            ) {
+              # Compute aggregated density from all vehicle types
+              agg_data <- pt_data %>%
+                group_by(dvmt) %>%
+                summarise(
+                  quantile = mean(quantile, na.rm = TRUE),
+                  .groups = "drop"
+                ) %>%
+                arrange(dvmt)
+
+              if (nrow(agg_data) > 1) {
+                # Compute density from CDF
+                agg_pdf <- agg_data %>%
+                  mutate(
+                    pdf = c(diff(quantile) / diff(dvmt), NA)
+                  ) %>%
+                  filter(!is.na(pdf), pdf >= 0)
+
+                if (nrow(agg_pdf) > 0) {
+                  # Scale PDF to histogram counts (approximate)
+                  max_pdf <- max(agg_pdf$pdf, na.rm = TRUE)
+                  if (max_pdf > 0) {
+                    # Normalize to a reasonable scale
+                    scale_factor <- nrow(pt_data) *
+                      (max(pt_data$dvmt) - min(pt_data$dvmt)) /
+                      30
+                    agg_pdf <- agg_pdf %>%
+                      mutate(pdf_scaled = pdf * scale_factor)
+
+                    p <- p %>%
+                      add_trace(
+                        data = agg_pdf,
+                        x = ~dvmt,
+                        y = ~pdf_scaled,
+                        type = 'scatter',
+                        mode = 'lines',
+                        name = 'Aggregated',
+                        line = list(color = 'black', width = 3, dash = 'dash'),
+                        yaxis = 'y2',
+                        hovertemplate = paste0(
+                          "<b>Aggregated Density</b><br>",
+                          "DVMT: %{x:.1f} miles<br>",
+                          "Density: %{y:.2f}<br>",
+                          "<extra></extra>"
+                        ),
+                        showlegend = (pt == powertrains[1])
+                      )
+                  }
+                }
+              }
+            }
+
+            layout_config <- list(
+              xaxis = list(title = "DVMT"),
+              yaxis = list(title = "Count"),
+              barmode = 'overlay',
+              annotations = list(
+                x = 0.5,
+                y = 1.05,
+                text = paste("<b>", toupper(pt), "</b>"),
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 12)
+              )
+            )
+
+            # Add secondary y-axis if aggregated line is shown
+            if (
+              !is.null(input$show_aggregated) &&
+                input$show_aggregated &&
+                length(vehicle_types) > 1
+            ) {
+              layout_config$yaxis2 <- list(
+                overlaying = 'y',
+                side = 'right',
+                title = 'Density',
+                showgrid = FALSE
+              )
+            }
+
+            p <- p %>% layout(layout_config)
+
+            return(p)
+          })
+
+          fig <- subplot(
+            plots,
+            nrows = ceiling(length(powertrains) / 3),
+            shareX = FALSE,
+            shareY = FALSE,
+            titleX = TRUE,
+            titleY = TRUE
+          ) %>%
+            layout(
+              title = list(
+                text = "<b>Histogram of Daily VMT</b><br><sub>Frequency distribution of daily vehicle miles traveled</sub>",
+                font = list(size = 16)
+              ),
+              hovermode = 'closest',
+              showlegend = TRUE,
+              legend = list(
+                orientation = "h",
+                x = 0.5,
+                xanchor = "center",
+                y = -0.15
+              )
+            ) %>%
+            config(
+              displayModeBar = TRUE,
+              modeBarButtonsToRemove = c('lasso2d', 'select2d'),
+              toImageButtonOptions = list(
+                format = 'png',
+                filename = 'dvmt_histogram_plot'
+              )
+            )
+
+          return(fig)
+        } else {
+          # Default to CDF if unknown type
+          return(
+            plot_ly() %>%
+              add_annotations(
+                text = "Unknown plot type",
+                xref = "paper",
+                yref = "paper",
+                x = 0.5,
+                y = 0.5,
+                showarrow = FALSE
+              )
+          )
         }
-
-        layout_config <- list(
-          xaxis = list(title = "DVMT"),
-          yaxis = list(title = "Count"),
-          barmode = 'overlay',
-          annotations = list(
-            x = 0.5, y = 1.05,
-            text = paste("<b>", toupper(pt), "</b>"),
-            xref = "paper", yref = "paper",
-            showarrow = FALSE,
-            font = list(size = 12)
-          )
+      },
+      error = function(e) {
+        return(
+          plot_ly() %>%
+            add_annotations(
+              text = paste("Error:", e$message),
+              xref = "paper",
+              yref = "paper",
+              x = 0.5,
+              y = 0.5,
+              showarrow = FALSE
+            )
         )
-
-        # Add secondary y-axis if aggregated line is shown
-        if(!is.null(input$show_aggregated) && input$show_aggregated && length(vehicle_types) > 1) {
-          layout_config$yaxis2 <- list(
-            overlaying = 'y',
-            side = 'right',
-            title = 'Density',
-            showgrid = FALSE
-          )
-        }
-
-        p <- p %>% layout(layout_config)
-
-        return(p)
-      })
-
-      fig <- subplot(plots, nrows = ceiling(length(powertrains)/3),
-                    shareX = FALSE, shareY = FALSE, titleX = TRUE, titleY = TRUE) %>%
-        layout(
-          title = list(
-            text = "<b>Histogram of Daily VMT</b><br><sub>Frequency distribution of daily vehicle miles traveled</sub>",
-            font = list(size = 16)
-          ),
-          hovermode = 'closest',
-          showlegend = TRUE,
-          legend = list(
-            orientation = "h",
-            x = 0.5,
-            xanchor = "center",
-            y = -0.15
-          )
-        ) %>%
-        config(
-          displayModeBar = TRUE,
-          modeBarButtonsToRemove = c('lasso2d', 'select2d'),
-          toImageButtonOptions = list(format = 'png', filename = 'dvmt_histogram_plot')
-        )
-
-      return(fig)
-    } else {
-      # Default to CDF if unknown type
-      return(plot_ly() %>%
-               add_annotations(text = "Unknown plot type",
-                             xref = "paper", yref = "paper",
-                             x = 0.5, y = 0.5, showarrow = FALSE))
-    }
-
-  }, error = function(e) {
-    return(plot_ly() %>%
-             add_annotations(text = paste("Error:", e$message),
-                           xref = "paper", yref = "paper",
-                           x = 0.5, y = 0.5, showarrow = FALSE))
+      }
+    )
   })
-})
 
   # Average DVMT Plot
   output$dvmt_summary <- renderPlotly({
@@ -1657,7 +1972,10 @@ output$cdf_plot <- renderPlotly({
       group_by(powertrain, vehicle_type) %>%
       summarise(avg_dvmt = mean(dvmt, na.rm = TRUE), .groups = "drop")
 
-    p <- ggplot(summary_data, aes(x = powertrain, y = avg_dvmt, fill = vehicle_type)) +
+    p <- ggplot(
+      summary_data,
+      aes(x = powertrain, y = avg_dvmt, fill = vehicle_type)
+    ) +
       geom_col(position = "dodge", alpha = 0.8) +
       labs(
         title = "Average DVMT by Fuel and Vehicle Type",
@@ -1670,25 +1988,48 @@ output$cdf_plot <- renderPlotly({
 
     ggplotly(p)
   })
-  
+
   # Annual VMT by Age - Category-based comparison
   smooth_series <- function(df, y_col, age_seq, span = 0.65) {
     df <- df %>% arrange(age_years)
     if (length(unique(df$age_years)) < 3 || nrow(df) < 3) {
-      approx_res <- approx(x = df$age_years, y = df[[y_col]], xout = age_seq, rule = 2, ties = mean)
+      approx_res <- approx(
+        x = df$age_years,
+        y = df[[y_col]],
+        xout = age_seq,
+        rule = 2,
+        ties = mean
+      )
       return(tibble::tibble(age_years = approx_res$x, value = approx_res$y))
     }
     fit <- tryCatch(
-      loess(stats::as.formula(paste(y_col, "~ age_years")), data = df, span = span, degree = 2),
+      loess(
+        stats::as.formula(paste(y_col, "~ age_years")),
+        data = df,
+        span = span,
+        degree = 2
+      ),
       error = function(e) NULL
     )
     if (is.null(fit)) {
-      approx_res <- approx(x = df$age_years, y = df[[y_col]], xout = age_seq, rule = 2, ties = mean)
+      approx_res <- approx(
+        x = df$age_years,
+        y = df[[y_col]],
+        xout = age_seq,
+        rule = 2,
+        ties = mean
+      )
       return(tibble::tibble(age_years = approx_res$x, value = approx_res$y))
     }
     preds <- predict(fit, newdata = data.frame(age_years = age_seq))
     if (all(is.na(preds))) {
-      approx_res <- approx(x = df$age_years, y = df[[y_col]], xout = age_seq, rule = 2, ties = mean)
+      approx_res <- approx(
+        x = df$age_years,
+        y = df[[y_col]],
+        xout = age_seq,
+        rule = 2,
+        ties = mean
+      )
       preds <- approx_res$y
     }
     tibble::tibble(age_years = age_seq, value = preds)
@@ -1713,7 +2054,13 @@ output$cdf_plot <- renderPlotly({
     if (is.null(x_value) || is.na(x_value) || nrow(df) == 0) {
       return(NA_real_)
     }
-    approx(x = df$age_years, y = df[[y_col]], xout = x_value, rule = 2, ties = mean)$y
+    approx(
+      x = df$age_years,
+      y = df[[y_col]],
+      xout = x_value,
+      rule = 2,
+      ties = mean
+    )$y
   }
 
   build_mileage_summary <- function(context) {
@@ -1721,23 +2068,29 @@ output$cdf_plot <- renderPlotly({
     if (nrow(aggregated) == 0) {
       return(dplyr::tibble())
     }
-    group_cols <- if (context$category_var == "powertrain") c("powertrain", "vehicle_type") else c("vehicle_type", "powertrain")
+    group_cols <- if (context$category_var == "powertrain") {
+      c("powertrain", "vehicle_type")
+    } else {
+      c("vehicle_type", "powertrain")
+    }
 
     aggregated %>%
       group_by(across(all_of(group_cols))) %>%
       arrange(age_years, .by_group = TRUE) %>%
-      group_modify(~ {
-        slope <- compute_linear_slope(.x, "mileage_predicted")
-        start_val <- approx_value(.x, "mileage_predicted", context$age_min)
-        end_val <- approx_value(.x, "mileage_predicted", context$age_max)
-        coef_val <- mean(.x$coef, na.rm = TRUE)
-        tibble::tibble(
-          `Predicted Miles (Age Start)` = round(start_val, 0),
-          `Predicted Miles (Age End)` = round(end_val, 0),
-          `Annual Mileage Change` = round(slope, 1),
-          `Coefficient (Annual Rate)` = round(coef_val, 1)
-        )
-      }) %>%
+      group_modify(
+        ~ {
+          slope <- compute_linear_slope(.x, "mileage_predicted")
+          start_val <- approx_value(.x, "mileage_predicted", context$age_min)
+          end_val <- approx_value(.x, "mileage_predicted", context$age_max)
+          coef_val <- mean(.x$coef, na.rm = TRUE)
+          tibble::tibble(
+            `Predicted Miles (Age Start)` = round(start_val, 0),
+            `Predicted Miles (Age End)` = round(end_val, 0),
+            `Annual Mileage Change` = round(slope, 1),
+            `Coefficient (Annual Rate)` = round(coef_val, 1)
+          )
+        }
+      ) %>%
       ungroup() %>%
       distinct()
   }
@@ -1747,21 +2100,33 @@ output$cdf_plot <- renderPlotly({
     if (nrow(aggregated) == 0) {
       return(dplyr::tibble())
     }
-    group_cols <- if (context$category_var == "powertrain") c("powertrain", "vehicle_type") else c("vehicle_type", "powertrain")
+    group_cols <- if (context$category_var == "powertrain") {
+      c("powertrain", "vehicle_type")
+    } else {
+      c("vehicle_type", "powertrain")
+    }
 
     aggregated %>%
       group_by(across(all_of(group_cols))) %>%
       arrange(age_years, .by_group = TRUE) %>%
-      group_modify(~ {
-        slope <- compute_linear_slope(.x, "rr_predicted")
-        start_val <- approx_value(.x, "rr_predicted", context$age_min)
-        end_val <- approx_value(.x, "rr_predicted", context$age_max)
-        tibble::tibble(
-          `Predicted Retention (Age Start)` = scales::percent(start_val, accuracy = 0.1),
-          `Predicted Retention (Age End)` = scales::percent(end_val, accuracy = 0.1),
-          `Annual Change (pp)` = round(slope * 100, 2)
-        )
-      }) %>%
+      group_modify(
+        ~ {
+          slope <- compute_linear_slope(.x, "rr_predicted")
+          start_val <- approx_value(.x, "rr_predicted", context$age_min)
+          end_val <- approx_value(.x, "rr_predicted", context$age_max)
+          tibble::tibble(
+            `Predicted Retention (Age Start)` = scales::percent(
+              start_val,
+              accuracy = 0.1
+            ),
+            `Predicted Retention (Age End)` = scales::percent(
+              end_val,
+              accuracy = 0.1
+            ),
+            `Annual Change (pp)` = round(slope * 100, 2)
+          )
+        }
+      ) %>%
       ungroup() %>%
       distinct()
   }
@@ -1770,13 +2135,19 @@ output$cdf_plot <- renderPlotly({
     context <- mileage_plot_context()
 
     if (is.null(context) || context$status != "ok") {
-      message <- if (!is.null(context$message)) context$message else "No mileage data available"
+      message <- if (!is.null(context$message)) {
+        context$message
+      } else {
+        "No mileage data available"
+      }
       return(
         plot_ly() %>%
           add_annotations(
             text = message,
-            xref = "paper", yref = "paper",
-            x = 0.5, y = 0.5,
+            xref = "paper",
+            yref = "paper",
+            x = 0.5,
+            y = 0.5,
             showarrow = FALSE
           )
       )
@@ -1796,8 +2167,10 @@ output$cdf_plot <- renderPlotly({
         plot_ly() %>%
           add_annotations(
             text = "No data matches current filters",
-            xref = "paper", yref = "paper",
-            x = 0.5, y = 0.5,
+            xref = "paper",
+            yref = "paper",
+            x = 0.5,
+            y = 0.5,
             showarrow = FALSE
           )
       )
@@ -1805,7 +2178,11 @@ output$cdf_plot <- renderPlotly({
 
     colors <- viridisLite::viridis(length(secondary_cats))
     color_map <- setNames(colors, secondary_cats)
-    secondary_label <- if (category_var == "powertrain") "Vehicle Type" else "Powertrain"
+    secondary_label <- if (category_var == "powertrain") {
+      "Vehicle Type"
+    } else {
+      "Powertrain"
+    }
 
     fig <- plot_ly()
 
@@ -1858,8 +2235,11 @@ output$cdf_plot <- renderPlotly({
           sec_data <- if (category_var == "powertrain") {
             cat_data %>% filter(vehicle_type == sec_cat)
           } else {
-            cat_data %>% filter(powertrain == sec_cat)
-          } %>% arrange(age_years)
+            {
+              cat_data %>% filter(powertrain == sec_cat)
+            } %>%
+              arrange(age_years)
+          }
 
           if (nrow(sec_data) == 0) {
             next
@@ -1875,11 +2255,19 @@ output$cdf_plot <- renderPlotly({
           if (min_age >= max_age) {
             next
           }
-          age_seq <- seq(min_age, max_age, length.out = max(80, length(sec_data$age_years) * 5))
+          age_seq <- seq(
+            min_age,
+            max_age,
+            length.out = max(80, length(sec_data$age_years) * 5)
+          )
           age_seq <- unique(age_seq)
 
           # Use prediction data for main line
-          mileage_smooth <- smooth_series(sec_data, "mileage_predicted", age_seq) %>%
+          mileage_smooth <- smooth_series(
+            sec_data,
+            "mileage_predicted",
+            age_seq
+          ) %>%
             rename(mileage_predicted = value)
 
           if (nrow(mileage_smooth) == 0) {
@@ -1891,8 +2279,14 @@ output$cdf_plot <- renderPlotly({
             # Get quantile data for this combination
             quant_data <- quantiles_data %>%
               filter(
-                tolower(powertrain) == tolower(if (category_var == "powertrain") cat_value else sec_cat),
-                tolower(vehicle_type) == tolower(if (category_var == "powertrain") sec_cat else cat_value)
+                tolower(powertrain) ==
+                  tolower(
+                    if (category_var == "powertrain") cat_value else sec_cat
+                  ),
+                tolower(vehicle_type) ==
+                  tolower(
+                    if (category_var == "powertrain") sec_cat else cat_value
+                  )
               )
 
             if (nrow(quant_data) > 0) {
@@ -1904,12 +2298,22 @@ output$cdf_plot <- renderPlotly({
 
                 if (nrow(quant_data_filtered) > 0) {
                   # Smooth quantile data
-                  quant_smooth_lower <- smooth_series(quant_data_filtered, "miles25", age_seq) %>%
+                  quant_smooth_lower <- smooth_series(
+                    quant_data_filtered,
+                    "miles25",
+                    age_seq
+                  ) %>%
                     rename(miles25 = value)
-                  quant_smooth_upper <- smooth_series(quant_data_filtered, "miles75", age_seq) %>%
+                  quant_smooth_upper <- smooth_series(
+                    quant_data_filtered,
+                    "miles75",
+                    age_seq
+                  ) %>%
                     rename(miles75 = value)
 
-                  if (nrow(quant_smooth_lower) > 0 && nrow(quant_smooth_upper) > 0) {
+                  if (
+                    nrow(quant_smooth_lower) > 0 && nrow(quant_smooth_upper) > 0
+                  ) {
                     # Add shaded confidence region
                     fig <- fig %>%
                       add_trace(
@@ -1932,7 +2336,10 @@ output$cdf_plot <- renderPlotly({
                         type = "scatter",
                         mode = "lines",
                         fill = "tonexty",
-                        fillcolor = paste0(substr(color_map[sec_cat], 1, 7), "20"),  # 20 = ~12% opacity
+                        fillcolor = paste0(
+                          substr(color_map[sec_cat], 1, 7),
+                          "20"
+                        ), # 20 = ~12% opacity
                         line = list(width = 0),
                         showlegend = FALSE,
                         legendgroup = sec_cat,
@@ -1954,14 +2361,22 @@ output$cdf_plot <- renderPlotly({
               y = ~mileage_predicted,
               type = "scatter",
               mode = "lines",
-              line = list(color = color_map[sec_cat], width = 2.5, shape = "spline"),
+              line = list(
+                color = color_map[sec_cat],
+                width = 2.5,
+                shape = "spline"
+              ),
               name = toupper(sec_cat),
               showlegend = (idx == 1),
               legendgroup = sec_cat,
               xaxis = xaxis_name,
               yaxis = yaxis_name,
               hovertemplate = paste0(
-                "<b>", toupper(cat_value), " - ", toupper(sec_cat), "</b><br>",
+                "<b>",
+                toupper(cat_value),
+                " - ",
+                toupper(sec_cat),
+                "</b><br>",
                 "Age: %{x:.1f} years<br>",
                 "Mileage: %{y:,.0f} miles<br>",
                 "<extra></extra>"
@@ -2057,13 +2472,19 @@ output$cdf_plot <- renderPlotly({
     context <- retention_plot_context()
 
     if (is.null(context) || context$status != "ok") {
-      message <- if (!is.null(context$message)) context$message else "No retention data available"
+      message <- if (!is.null(context$message)) {
+        context$message
+      } else {
+        "No retention data available"
+      }
       return(
         plot_ly() %>%
           add_annotations(
             text = message,
-            xref = "paper", yref = "paper",
-            x = 0.5, y = 0.5,
+            xref = "paper",
+            yref = "paper",
+            x = 0.5,
+            y = 0.5,
             showarrow = FALSE
           )
       )
@@ -2082,8 +2503,10 @@ output$cdf_plot <- renderPlotly({
         plot_ly() %>%
           add_annotations(
             text = "No data matches current filters",
-            xref = "paper", yref = "paper",
-            x = 0.5, y = 0.5,
+            xref = "paper",
+            yref = "paper",
+            x = 0.5,
+            y = 0.5,
             showarrow = FALSE
           )
       )
@@ -2091,7 +2514,11 @@ output$cdf_plot <- renderPlotly({
 
     colors <- viridisLite::viridis(length(secondary_cats))
     color_map <- setNames(colors, secondary_cats)
-    secondary_label <- if (category_var == "powertrain") "Vehicle Type" else "Powertrain"
+    secondary_label <- if (category_var == "powertrain") {
+      "Vehicle Type"
+    } else {
+      "Powertrain"
+    }
 
     fig <- plot_ly()
 
@@ -2144,8 +2571,11 @@ output$cdf_plot <- renderPlotly({
           sec_data <- if (category_var == "powertrain") {
             cat_data %>% filter(vehicle_type == sec_cat)
           } else {
-            cat_data %>% filter(powertrain == sec_cat)
-          } %>% arrange(age_years)
+            {
+              cat_data %>% filter(powertrain == sec_cat)
+            } %>%
+              arrange(age_years)
+          }
 
           if (nrow(sec_data) == 0) {
             next
@@ -2161,11 +2591,20 @@ output$cdf_plot <- renderPlotly({
           if (min_age >= max_age) {
             next
           }
-          age_seq <- seq(min_age, max_age, length.out = max(80, length(sec_data$age_years) * 5))
+          age_seq <- seq(
+            min_age,
+            max_age,
+            length.out = max(80, length(sec_data$age_years) * 5)
+          )
           age_seq <- unique(age_seq)
 
           # Use prediction data for main line
-          rr_smooth <- smooth_series(sec_data, "rr_predicted", age_seq, span = 0.6) %>%
+          rr_smooth <- smooth_series(
+            sec_data,
+            "rr_predicted",
+            age_seq,
+            span = 0.6
+          ) %>%
             rename(rr_predicted = value)
 
           if (nrow(rr_smooth) == 0) {
@@ -2177,8 +2616,14 @@ output$cdf_plot <- renderPlotly({
             # Get quantile data for this combination
             quant_data <- quantiles_data %>%
               filter(
-                tolower(powertrain) == tolower(if (category_var == "powertrain") cat_value else sec_cat),
-                tolower(vehicle_type) == tolower(if (category_var == "powertrain") sec_cat else cat_value)
+                tolower(powertrain) ==
+                  tolower(
+                    if (category_var == "powertrain") cat_value else sec_cat
+                  ),
+                tolower(vehicle_type) ==
+                  tolower(
+                    if (category_var == "powertrain") sec_cat else cat_value
+                  )
               )
 
             if (nrow(quant_data) > 0) {
@@ -2190,42 +2635,57 @@ output$cdf_plot <- renderPlotly({
 
                 if (nrow(quant_data_filtered) > 0) {
                   # Smooth quantile data
-                  quant_smooth_lower <- smooth_series(quant_data_filtered, "rr25", age_seq, span = 0.6) %>%
+                  quant_smooth_lower <- smooth_series(
+                    quant_data_filtered,
+                    "rr25",
+                    age_seq,
+                    span = 0.6
+                  ) %>%
                     rename(rr25 = value)
-                  quant_smooth_upper <- smooth_series(quant_data_filtered, "rr75", age_seq, span = 0.6) %>%
+                  quant_smooth_upper <- smooth_series(
+                    quant_data_filtered,
+                    "rr75",
+                    age_seq,
+                    span = 0.6
+                  ) %>%
                     rename(rr75 = value)
 
-                  if (nrow(quant_smooth_lower) > 0 && nrow(quant_smooth_upper) > 0) {
-                  # Add shaded confidence region
-                  fig <- fig %>%
-                    add_trace(
-                      data = quant_smooth_upper,
-                      x = ~age_years,
-                      y = ~rr75,
-                      type = "scatter",
-                      mode = "lines",
-                      line = list(width = 0),
-                      showlegend = FALSE,
-                      legendgroup = sec_cat,
-                      xaxis = xaxis_name,
-                      yaxis = yaxis_name,
-                      hoverinfo = "skip"
-                    ) %>%
-                    add_trace(
-                      data = quant_smooth_lower,
-                      x = ~age_years,
-                      y = ~rr25,
-                      type = "scatter",
-                      mode = "lines",
-                      fill = "tonexty",
-                      fillcolor = paste0(substr(color_map[sec_cat], 1, 7), "30"),  # 30 = ~20% opacity
-                      line = list(width = 0),
-                      showlegend = FALSE,
-                      legendgroup = sec_cat,
-                      xaxis = xaxis_name,
-                      yaxis = yaxis_name,
-                      hoverinfo = "skip"
-                    )
+                  if (
+                    nrow(quant_smooth_lower) > 0 && nrow(quant_smooth_upper) > 0
+                  ) {
+                    # Add shaded confidence region
+                    fig <- fig %>%
+                      add_trace(
+                        data = quant_smooth_upper,
+                        x = ~age_years,
+                        y = ~rr75,
+                        type = "scatter",
+                        mode = "lines",
+                        line = list(width = 0),
+                        showlegend = FALSE,
+                        legendgroup = sec_cat,
+                        xaxis = xaxis_name,
+                        yaxis = yaxis_name,
+                        hoverinfo = "skip"
+                      ) %>%
+                      add_trace(
+                        data = quant_smooth_lower,
+                        x = ~age_years,
+                        y = ~rr25,
+                        type = "scatter",
+                        mode = "lines",
+                        fill = "tonexty",
+                        fillcolor = paste0(
+                          substr(color_map[sec_cat], 1, 7),
+                          "30"
+                        ), # 30 = ~20% opacity
+                        line = list(width = 0),
+                        showlegend = FALSE,
+                        legendgroup = sec_cat,
+                        xaxis = xaxis_name,
+                        yaxis = yaxis_name,
+                        hoverinfo = "skip"
+                      )
                   }
                 }
               }
@@ -2240,14 +2700,22 @@ output$cdf_plot <- renderPlotly({
               y = ~rr_predicted,
               type = "scatter",
               mode = "lines",
-              line = list(color = color_map[sec_cat], width = 2.5, shape = "spline"),
+              line = list(
+                color = color_map[sec_cat],
+                width = 2.5,
+                shape = "spline"
+              ),
               name = toupper(sec_cat),
               showlegend = (idx == 1),
               legendgroup = sec_cat,
               xaxis = xaxis_name,
               yaxis = yaxis_name,
               hovertemplate = paste0(
-                "<b>", toupper(cat_value), " - ", toupper(sec_cat), "</b><br>",
+                "<b>",
+                toupper(cat_value),
+                " - ",
+                toupper(sec_cat),
+                "</b><br>",
                 "Age: %{x:.1f} years<br>",
                 "Retention Rate: %{y:.1%}<br>",
                 "<extra></extra>"
@@ -2280,7 +2748,7 @@ output$cdf_plot <- renderPlotly({
       yaxis_config <- list(
         domain = c(y_start, y_end),
         anchor = xaxis_name,
-        range = c(0, 1.2),  # Set to 120% (1.2)
+        range = c(0, 1.2), # Set to 120% (1.2)
         tickformat = ".0%",
         title = if (col == 1) {
           list(text = "Retention rate", font = list(size = 10))
@@ -2288,7 +2756,7 @@ output$cdf_plot <- renderPlotly({
           ""
         },
         showticklabels = TRUE,
-        fixedrange = TRUE  # Fix Y-axis to prevent zooming beyond 120%
+        fixedrange = TRUE # Fix Y-axis to prevent zooming beyond 120%
       )
 
       if (idx == 1) {
@@ -2348,16 +2816,28 @@ output$cdf_plot <- renderPlotly({
     context <- mileage_plot_context()
 
     if (is.null(context) || context$status != "ok") {
-      message <- if (!is.null(context$message)) context$message else "No mileage data available"
+      message <- if (!is.null(context$message)) {
+        context$message
+      } else {
+        "No mileage data available"
+      }
       table_data <- tibble::tibble(Message = message)
-      return(DT::datatable(table_data, options = list(dom = "t"), rownames = FALSE))
+      return(DT::datatable(
+        table_data,
+        options = list(dom = "t"),
+        rownames = FALSE
+      ))
     }
 
     table_data <- build_mileage_summary(context)
 
     if (nrow(table_data) == 0) {
       table_data <- tibble::tibble(Message = "No mileage data available")
-      return(DT::datatable(table_data, options = list(dom = "t"), rownames = FALSE))
+      return(DT::datatable(
+        table_data,
+        options = list(dom = "t"),
+        rownames = FALSE
+      ))
     }
 
     if (context$category_var == "powertrain") {
@@ -2387,16 +2867,28 @@ output$cdf_plot <- renderPlotly({
     context <- retention_plot_context()
 
     if (is.null(context) || context$status != "ok") {
-      message <- if (!is.null(context$message)) context$message else "No retention data available"
+      message <- if (!is.null(context$message)) {
+        context$message
+      } else {
+        "No retention data available"
+      }
       table_data <- tibble::tibble(Message = message)
-      return(DT::datatable(table_data, options = list(dom = "t"), rownames = FALSE))
+      return(DT::datatable(
+        table_data,
+        options = list(dom = "t"),
+        rownames = FALSE
+      ))
     }
 
     table_data <- build_retention_summary(context)
 
     if (nrow(table_data) == 0) {
       table_data <- tibble::tibble(Message = "No retention data available")
-      return(DT::datatable(table_data, options = list(dom = "t"), rownames = FALSE))
+      return(DT::datatable(
+        table_data,
+        options = list(dom = "t"),
+        rownames = FALSE
+      ))
     }
 
     if (context$category_var == "powertrain") {
@@ -2428,7 +2920,11 @@ output$cdf_plot <- renderPlotly({
 
     if (is.null(data) || nrow(data) == 0) {
       table_data <- tibble::tibble(Message = "No make-model data available")
-      return(DT::datatable(table_data, options = list(dom = "t"), rownames = FALSE))
+      return(DT::datatable(
+        table_data,
+        options = list(dom = "t"),
+        rownames = FALSE
+      ))
     }
 
     # Format the table
@@ -2440,7 +2936,13 @@ output$cdf_plot <- renderPlotly({
         Powertrain = toupper(powertrain),
         `Coefficient (miles/year)` = round(coef, 0)
       ) %>%
-      select(Make, Model, `Vehicle Type`, Powertrain, `Coefficient (miles/year)`) %>%
+      select(
+        Make,
+        Model,
+        `Vehicle Type`,
+        Powertrain,
+        `Coefficient (miles/year)`
+      ) %>%
       arrange(Make, Model)
 
     DT::datatable(
@@ -2457,7 +2959,11 @@ output$cdf_plot <- renderPlotly({
 
     if (is.null(data) || nrow(data) == 0) {
       table_data <- tibble::tibble(Message = "No make-model data available")
-      return(DT::datatable(table_data, options = list(dom = "t"), rownames = FALSE))
+      return(DT::datatable(
+        table_data,
+        options = list(dom = "t"),
+        rownames = FALSE
+      ))
     }
 
     # Calculate summary statistics per make-model combination
@@ -2471,7 +2977,10 @@ output$cdf_plot <- renderPlotly({
         .groups = "drop"
       ) %>%
       mutate(
-        annual_change_pp = round((rr_end - rr_start) / (age_end - age_start) * 100, 2),
+        annual_change_pp = round(
+          (rr_end - rr_start) / (age_end - age_start) * 100,
+          2
+        ),
         Make = tools::toTitleCase(make),
         Model = tools::toTitleCase(model),
         `Vehicle Type` = toupper(vehicle_type),
@@ -2480,7 +2989,15 @@ output$cdf_plot <- renderPlotly({
         `Retention (End)` = scales::percent(rr_end, accuracy = 0.1),
         `Annual Change (pp)` = annual_change_pp
       ) %>%
-      select(Make, Model, `Vehicle Type`, Powertrain, `Retention (Start)`, `Retention (End)`, `Annual Change (pp)`) %>%
+      select(
+        Make,
+        Model,
+        `Vehicle Type`,
+        Powertrain,
+        `Retention (Start)`,
+        `Retention (End)`,
+        `Annual Change (pp)`
+      ) %>%
       arrange(Make, Model)
 
     DT::datatable(
@@ -2524,7 +3041,8 @@ output$cdf_plot <- renderPlotly({
     metric <- input$hhi_metric
 
     # Load appropriate dataset
-    hhi_data <- switch(metric,
+    hhi_data <- switch(
+      metric,
       "make" = hhi_make_data(),
       "type" = hhi_type_data(),
       "price" = hhi_price_data(),
@@ -2565,8 +3083,16 @@ output$cdf_plot <- renderPlotly({
 
         if (nrow(yr_data) > 0) {
           # Color scheme: Coral for 2018, Teal for 2024
-          color <- if (yr == "2018") "rgba(255, 107, 107, 0.7)" else "rgba(78, 205, 196, 0.7)"
-          line_color <- if (yr == "2018") "rgb(200, 50, 50)" else "rgb(40, 150, 140)"
+          color <- if (yr == "2018") {
+            "rgba(255, 107, 107, 0.7)"
+          } else {
+            "rgba(78, 205, 196, 0.7)"
+          }
+          line_color <- if (yr == "2018") {
+            "rgb(200, 50, 50)"
+          } else {
+            "rgb(40, 150, 140)"
+          }
 
           fig <- fig %>%
             add_trace(
@@ -2588,11 +3114,23 @@ output$cdf_plot <- renderPlotly({
               boxmean = FALSE,
               orientation = "h",
               hovertemplate = paste0(
-                "<b>", pt, " (", yr, ")</b><br>",
-                "Median HHI: ", round(yr_data$median, 3), "<br>",
-                "Q1: ", round(yr_data$q25, 3), "<br>",
-                "Q3: ", round(yr_data$q75, 3), "<br>",
-                "IQR: ", round(yr_data$IQR, 3), "<br>",
+                "<b>",
+                pt,
+                " (",
+                yr,
+                ")</b><br>",
+                "Median HHI: ",
+                round(yr_data$median, 3),
+                "<br>",
+                "Q1: ",
+                round(yr_data$q25, 3),
+                "<br>",
+                "Q3: ",
+                round(yr_data$q75, 3),
+                "<br>",
+                "IQR: ",
+                round(yr_data$IQR, 3),
+                "<br>",
                 "<extra></extra>"
               )
             )
@@ -2643,12 +3181,20 @@ output$cdf_plot <- renderPlotly({
     # Label mapping function
     get_label <- function(var_name, value) {
       if (var_name == "powertrain") {
-        labels <- c("bev" = "BEV", "cv" = "Conventional", "hev" = "Hybrid",
-                   "phev" = "PHEV")
+        labels <- c(
+          "bev" = "BEV",
+          "cv" = "Conventional",
+          "hev" = "Hybrid",
+          "phev" = "PHEV"
+        )
         return(labels[value])
       } else if (var_name == "vehicle_type") {
-        labels <- c("car" = "Car", "suv" = "SUV", "pickup" = "Pickup",
-                   "minivan" = "Minivan")
+        labels <- c(
+          "car" = "Car",
+          "suv" = "SUV",
+          "pickup" = "Pickup",
+          "minivan" = "Minivan"
+        )
         return(labels[value])
       } else {
         return(value)
@@ -2667,7 +3213,13 @@ output$cdf_plot <- renderPlotly({
       facet_order <- c("car", "suv", "pickup", "minivan")
       facet_values <- intersect(facet_order, unique(data[[facet_var]]))
     } else if (facet_var == "price_bin") {
-      facet_order <- c("$0-$30k", "$30k-$40k", "$40k-$50k", "$50k-$60k", "$60k+")
+      facet_order <- c(
+        "$0-$30k",
+        "$30k-$40k",
+        "$40k-$50k",
+        "$50k-$60k",
+        "$60k+"
+      )
       facet_values <- intersect(facet_order, unique(data[[facet_var]]))
     } else {
       facet_values <- sort(unique(data[[facet_var]]))
@@ -2686,7 +3238,13 @@ output$cdf_plot <- renderPlotly({
 
       # Get unique x-axis values with proper ordering
       if (xaxis_var == "price_bin") {
-        xaxis_order <- c("$0-$30k", "$30k-$40k", "$40k-$50k", "$50k-$60k", "$60k+")
+        xaxis_order <- c(
+          "$0-$30k",
+          "$30k-$40k",
+          "$40k-$50k",
+          "$50k-$60k",
+          "$60k+"
+        )
         xaxis_values <- intersect(xaxis_order, unique(facet_data[[xaxis_var]]))
       } else if (xaxis_var == "powertrain") {
         xaxis_order <- c("bev", "cv", "hev", "phev")
@@ -2716,7 +3274,7 @@ output$cdf_plot <- renderPlotly({
             add_trace(
               type = "scatter",
               mode = "lines",
-              x = c(j - 1, j - 1),  # Use numeric position
+              x = c(j - 1, j - 1), # Use numeric position
               y = c(val_2018, val_2024),
               line = list(color = "rgba(80, 80, 80, 0.7)", width = 2.5),
               showlegend = FALSE,
@@ -2726,15 +3284,22 @@ output$cdf_plot <- renderPlotly({
             add_trace(
               type = "scatter",
               mode = "markers",
-              x = c(j - 1),  # Use numeric position
+              x = c(j - 1), # Use numeric position
               y = c(val_2018),
-              marker = list(size = 12, color = "rgba(60, 60, 60, 0.9)",
-                          symbol = "circle", line = list(width = 1, color = "white")),
+              marker = list(
+                size = 12,
+                color = "rgba(60, 60, 60, 0.9)",
+                symbol = "circle",
+                line = list(width = 1, color = "white")
+              ),
               name = if (i == 1 && j == 1) "2018" else NULL,
               showlegend = if (i == 1 && j == 1) TRUE else FALSE,
               hovertemplate = paste0(
-                x_label, "<br>",
-                "2018: ", round(val_2018 * 100, 1), "%",
+                x_label,
+                "<br>",
+                "2018: ",
+                round(val_2018 * 100, 1),
+                "%",
                 "<extra></extra>"
               ),
               legendgroup = "2018"
@@ -2743,19 +3308,26 @@ output$cdf_plot <- renderPlotly({
             add_trace(
               type = "scatter",
               mode = "markers",
-              x = c(j - 1),  # Use numeric position
+              x = c(j - 1), # Use numeric position
               y = c(val_2024),
               marker = list(
                 size = 13,
                 color = "rgba(60, 60, 60, 0.9)",
-                symbol = if (val_2024 > val_2018) "triangle-up" else "triangle-down",
+                symbol = if (val_2024 > val_2018) {
+                  "triangle-up"
+                } else {
+                  "triangle-down"
+                },
                 line = list(width = 1, color = "white")
               ),
               name = if (i == 1 && j == 1) "2024" else NULL,
               showlegend = if (i == 1 && j == 1) TRUE else FALSE,
               hovertemplate = paste0(
-                x_label, "<br>",
-                "2024: ", round(val_2024 * 100, 1), "%",
+                x_label,
+                "<br>",
+                "2024: ",
+                round(val_2024 * 100, 1),
+                "%",
                 "<extra></extra>"
               ),
               legendgroup = "2024"
@@ -2779,8 +3351,14 @@ output$cdf_plot <- renderPlotly({
     }
 
     # Create subplot with facets
-    fig <- subplot(plot_list, nrows = 1, shareY = TRUE, titleX = TRUE, titleY = TRUE,
-                   margin = 0.04)
+    fig <- subplot(
+      plot_list,
+      nrows = 1,
+      shareY = TRUE,
+      titleX = TRUE,
+      titleY = TRUE,
+      margin = 0.04
+    )
 
     # Add titles and layout
     annotations <- list()
@@ -2802,7 +3380,13 @@ output$cdf_plot <- renderPlotly({
     fig <- fig %>%
       layout(
         title = list(
-          text = paste0("Change in Share of Listings by ", tools::toTitleCase(facet_var), " and ", tools::toTitleCase(xaxis_var), " (2018-2024)"),
+          text = paste0(
+            "Change in Share of Listings by ",
+            tools::toTitleCase(facet_var),
+            " and ",
+            tools::toTitleCase(xaxis_var),
+            " (2018-2024)"
+          ),
           x = 0.5,
           xanchor = "center",
           font = list(size = 14)
@@ -2846,12 +3430,20 @@ output$cdf_plot <- renderPlotly({
     # Label mapping function (same as in Listings)
     get_label <- function(var_name, value) {
       if (var_name == "powertrain") {
-        labels <- c("bev" = "BEV", "cv" = "Conventional", "hev" = "Hybrid",
-                   "phev" = "PHEV")
+        labels <- c(
+          "bev" = "BEV",
+          "cv" = "Conventional",
+          "hev" = "Hybrid",
+          "phev" = "PHEV"
+        )
         return(labels[value])
       } else if (var_name == "vehicle_type") {
-        labels <- c("car" = "Car", "suv" = "SUV", "pickup" = "Pickup",
-                   "minivan" = "Minivan")
+        labels <- c(
+          "car" = "Car",
+          "suv" = "SUV",
+          "pickup" = "Pickup",
+          "minivan" = "Minivan"
+        )
         return(labels[value])
       } else {
         return(value)
@@ -2920,7 +3512,9 @@ output$cdf_plot <- renderPlotly({
               showlegend = FALSE,
               hovertemplate = paste0(
                 "Year: %{x}<br>",
-                "Percentage: ", sprintf("%.1f", plot_data$p * 100), "%",
+                "Percentage: ",
+                sprintf("%.1f", plot_data$p * 100),
+                "%",
                 "<extra></extra>"
               )
             )
@@ -2979,8 +3573,14 @@ output$cdf_plot <- renderPlotly({
     fig <- fig %>%
       layout(
         title = list(
-          text = paste0("Percentage of Dealerships with At Least One Vehicle<br>",
-                       "<sub>by ", tools::toTitleCase(var1), " and ", tools::toTitleCase(var2), "</sub>"),
+          text = paste0(
+            "Percentage of Dealerships with At Least One Vehicle<br>",
+            "<sub>by ",
+            tools::toTitleCase(var1),
+            " and ",
+            tools::toTitleCase(var2),
+            "</sub>"
+          ),
           x = 0.5,
           xanchor = "center"
         ),
@@ -3000,17 +3600,20 @@ output$cdf_plot <- renderPlotly({
 
   # Raw Data Table
   output$raw_data_table <- DT::renderDataTable({
-    DT::datatable(filtered_data(), options = list(pageLength = 15, scrollX = TRUE))
+    DT::datatable(
+      filtered_data(),
+      options = list(pageLength = 15, scrollX = TRUE)
+    )
   })
-  
+
   # Similarity Analysis Plot (for Nearest Vehicle page)
   output$similarity_plot <- renderPlotly({
     data <- filtered_data()
-    
-    if(nrow(data) == 0) {
+
+    if (nrow(data) == 0) {
       return(plotly_empty())
     }
-    
+
     # Create similarity matrix based on DVMT values
     similarity_data <- data %>%
       group_by(powertrain, vehicle_type) %>%
@@ -3022,7 +3625,7 @@ output$cdf_plot <- renderPlotly({
       mutate(
         vehicle_combo = paste(powertrain, vehicle_type, sep = " - ")
       )
-    
+
     p <- ggplot(similarity_data, aes(x = mean_dvmt, y = median_dvmt)) +
       geom_point(aes(color = powertrain, size = 3), alpha = 0.7) +
       geom_text(aes(label = vehicle_type), vjust = -0.8, size = 3) +
@@ -3036,18 +3639,18 @@ output$cdf_plot <- renderPlotly({
       theme_minimal() +
       theme(legend.position = "bottom") +
       guides(size = "none")
-    
+
     ggplotly(p, tooltip = c("x", "y", "colour", "text"))
   })
-  
+
   # Clustering Plot (for Nearest Vehicle page)
   output$cluster_plot <- renderPlotly({
     data <- filtered_data()
-    
-    if(nrow(data) == 0) {
+
+    if (nrow(data) == 0) {
       return(plotly_empty())
     }
-    
+
     # Simple clustering visualization
     cluster_data <- data %>%
       group_by(powertrain, vehicle_type) %>%
@@ -3056,7 +3659,7 @@ output$cdf_plot <- renderPlotly({
         dvmt_range = max(dvmt) - min(dvmt),
         .groups = "drop"
       )
-    
+
     p <- ggplot(cluster_data, aes(x = count, y = dvmt_range)) +
       geom_point(aes(color = powertrain, size = count), alpha = 0.7) +
       geom_text(aes(label = vehicle_type), vjust = 1.2, size = 3) +
@@ -3070,10 +3673,10 @@ output$cdf_plot <- renderPlotly({
       theme_minimal() +
       theme(legend.position = "bottom") +
       guides(size = "none")
-    
+
     ggplotly(p, tooltip = c("x", "y", "colour"))
   })
-  
+
   # Summary Tables
   output$fuel_summary <- renderTable({
     filtered_data() %>%
@@ -3085,7 +3688,7 @@ output$cdf_plot <- renderPlotly({
         .groups = "drop"
       )
   })
-  
+
   output$vehicle_summary <- renderTable({
     filtered_data() %>%
       group_by(vehicle_type) %>%
