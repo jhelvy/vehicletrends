@@ -4,6 +4,7 @@
 # Load required libraries
 library(shiny)
 library(bslib)
+library(shinyjs)
 library(plotly)
 library(DT)
 library(dplyr)
@@ -34,8 +35,8 @@ ui <- page_navbar(
 
   # Custom CSS for enhanced UI
   header = tags$head(
-    tags$style(HTML(
-      "
+    shinyjs::useShinyjs(),
+    tags$style(HTML("
       /* Navbar styling */
       .navbar-nav {
         margin: 0 auto;
@@ -120,173 +121,62 @@ ui <- page_navbar(
     "
     ))
   ),
-
-  # Global sidebar for filters (shared across all pages)
-  sidebar = sidebar(
-    title = "Global Filters",
-    width = 280,
-
-    h5("Dataset Filters", style = "font-weight: bold; color: #2c3e50;"),
-
-    checkboxGroupInput(
-      "fuel_types",
-      "Powertrain Type:",
-      choices = list(
-        "BEV" = "bev",
-        "Conventional" = "cv",
-        "Diesel" = "diesel",
-        "Flex Fuel" = "flex",
-        "Hybrid" = "hev",
-        "PHEV" = "phev"
-      ),
-      selected = c("bev", "cv", "hev")
-    ),
-
-    checkboxGroupInput(
-      "vehicle_types",
-      "Vehicle Types:",
-      choices = list(
-        "Car" = "car",
-        "CUV" = "cuv",
-        "Minivan" = "minivan",
-        "Pickup" = "pickup",
-        "SUV" = "suv"
-      ),
-      selected = c("car", "cuv", "minivan", "pickup", "suv")
-    ),
-
-    checkboxInput(
-      "show_confidence_bands",
-      "Show Confidence Regions (25th-75th percentile)",
-      value = FALSE
-    ),
-
-    hr(),
-
-    h5(
-      "Metric-Specific Controls",
-      style = "font-weight: bold; color: #2c3e50;"
-    ),
-
-    # Conditional UI for metric-specific filters
-    conditionalPanel(
-      condition = "input.tabs == 'Daily VMT'",
-      h6("Daily VMT Controls", style = "font-weight: 600; color: #34495e;"),
-
-      sliderInput(
-        "dvmt_range",
-        "DVMT Range:",
-        min = 0,
-        max = 100,
-        value = c(0, 100)
-      ),
-
-      radioButtons(
-        "plot_type",
-        "Plot Type:",
-        choices = list("CDF" = "cdf", "PDF" = "pdf", "Histogram" = "hist"),
-        selected = "cdf"
-      ),
-
-      checkboxInput("show_aggregated", "Show Aggregated Line", FALSE)
-    ),
-
-    conditionalPanel(
-      condition = "input.tabs == 'Annual VMT'",
-      h6("Annual VMT Controls", style = "font-weight: 600; color: #34495e;"),
-
-      radioButtons(
-        "comparison_category",
-        "Compare by Category:",
-        choices = list(
-          "Powertrain" = "powertrain",
-          "Vehicle Type" = "vehicle_type"
-        ),
-        selected = "powertrain"
-      ),
-
-      hr(style = "border-color: #ddd; margin: 10px 0;"),
-
-      sliderInput(
-        "age_range",
-        "Vehicle Age Range (Years):",
-        min = 1,
-        max = 10,
-        value = c(2, 8),
-        step = 0.5
-      )
-    ),
-
-    conditionalPanel(
-      condition = "input.tabs == 'Depreciation'",
-      h6("Depreciation Controls", style = "font-weight: 600; color: #34495e;"),
-
-      radioButtons(
-        "depreciation_category",
-        "Compare by Category:",
-        choices = list(
-          "Powertrain" = "powertrain",
-          "Vehicle Type" = "vehicle_type"
-        ),
-        selected = "powertrain"
-      ),
-
-      hr(style = "border-color: #ddd; margin: 10px 0;"),
-
-      sliderInput(
-        "depreciation_age_range",
-        "Age Range for Analysis (Years):",
-        min = 1,
-        max = 8,
-        value = c(1, 8),
-        step = 0.5
-      )
-    ),
-
-    conditionalPanel(
-      condition = "input.tabs == 'Market Conc.'",
-      h6(
-        "Market Concentration Controls",
-        style = "font-weight: 600; color: #34495e;"
-      ),
-
-      radioButtons(
-        "hhi_metric",
-        "HHI Metric:",
-        choices = list(
-          "Brand (Make)" = "make",
-          "Vehicle Type" = "type",
-          "Price Bin" = "price"
-        ),
-        selected = "make"
-      ),
-
-      checkboxGroupInput(
-        "hhi_powertrains",
-        "Show Powertrains:",
-        choices = list(
-          "BEV" = "bev",
-          "Conventional" = "cv",
-          "Hybrid" = "hev",
-          "PHEV" = "phev"
-        ),
-        selected = c("bev", "cv", "hev", "phev")
-      )
-    ),
-  ),
-
+  
   # Daily VMT Page
   nav_panel(
     title = "Daily VMT",
     value = "Daily VMT",
-    icon = icon("chart-line"),
-    card(
-      full_screen = TRUE,
-      card_header(
-        "Daily Vehicle Miles Traveled Distribution",
-        class = "text-center"
+    icon = icon("bars"),
+    layout_sidebar(
+      sidebar = sidebar(
+        title = "Daily VMT Controls",
+        width = 250,
+
+        checkboxGroupInput("daily_vmt_fuel_types",
+                          "Powertrain Type:",
+                          choices = list("BEV" = "bev",
+                                       "Conventional" = "cv",
+                                       "Diesel" = "diesel",
+                                       "Flex Fuel" = "flex",
+                                       "Hybrid" = "hev",
+                                       "PHEV" = "phev"),
+                          selected = c("bev", "cv", "hev")),
+
+        checkboxGroupInput("daily_vmt_vehicle_types",
+                          "Vehicle Types:",
+                          choices = list("Car" = "car",
+                                       "CUV" = "cuv",
+                                       "Minivan" = "minivan",
+                                       "Pickup" = "pickup",
+                                       "SUV" = "suv"),
+                          selected = c("car", "cuv", "minivan", "pickup", "suv")),
+
+        hr(),
+
+        sliderInput("dvmt_range",
+                   "DVMT Range:",
+                   min = 0, max = 100, value = c(0, 100)),
+
+        radioButtons("plot_type", "Plot Type:",
+                    choices = list("CDF" = "cdf",
+                                 "PDF" = "pdf",
+                                 "Histogram" = "hist"),
+                    selected = "cdf"),
+
+        checkboxInput("show_aggregated", "Show Aggregated Line", FALSE),
+
+        checkboxInput("daily_vmt_show_confidence_bands",
+                      "Show Confidence Regions (25th-75th percentile)",
+                      value = FALSE)
       ),
-      plotlyOutput("cdf_plot", height = "650px")
+      card(
+        full_screen = TRUE,
+        card_header(
+          "Daily Vehicle Miles Traveled Distribution",
+          class = "text-center"
+        ),
+        plotlyOutput("cdf_plot", height = "650px")
+      )
     )
   ),
 
@@ -294,31 +184,91 @@ ui <- page_navbar(
   nav_panel(
     title = "Annual VMT",
     value = "Annual VMT",
-    icon = icon("road"),
-    card(
-      full_screen = TRUE,
-      card_header(
-        "Vehicle Mileage Trends by Age",
-        class = "text-center"
+    icon = icon("chart-area"),
+    layout_sidebar(
+      sidebar = sidebar(
+        title = "Annual VMT Controls",
+        width = 250,
+
+        checkboxGroupInput("annual_vmt_fuel_types",
+                          "Powertrain Type:",
+                          choices = list("BEV" = "bev",
+                                       "Conventional" = "cv",
+                                       "Diesel" = "diesel",
+                                       "Flex Fuel" = "flex",
+                                       "Hybrid" = "hev",
+                                       "PHEV" = "phev"),
+                          selected = c("bev", "cv", "hev")),
+
+        checkboxGroupInput("annual_vmt_vehicle_types",
+                          "Vehicle Types:",
+                          choices = list("Car" = "car",
+                                       "CUV" = "cuv",
+                                       "Minivan" = "minivan",
+                                       "Pickup" = "pickup",
+                                       "SUV" = "suv"),
+                          selected = c("car", "cuv", "minivan", "pickup", "suv")),
+
+        hr(),
+
+        radioButtons("comparison_category",
+                    "Compare by Category:",
+                    choices = list("Powertrain" = "powertrain",
+                                 "Vehicle Type" = "vehicle_type"),
+                    selected = "powertrain"),
+
+        hr(style = "border-color: #ddd; margin: 10px 0;"),
+
+        sliderInput("age_range",
+                   "Vehicle Age Range (Years):",
+                   min = 1, max = 10, value = c(2, 8), step = 0.5),
+
+        checkboxInput("annual_vmt_show_confidence_bands",
+                      "Show Confidence Regions (25th-75th percentile)",
+                      value = FALSE)
       ),
-      plotlyOutput("mileage_plot", height = "800px")
-    ),
-    # Two-column layout for tables
-    layout_columns(
-      col_widths = c(6, 6),
-      card(
-        card_header(
-          "Mileage Summary Table (Powertrain-Vehicle Type)",
-          class = "text-center"
+      # Main content area with tab switching
+      div(
+        # Toggle buttons
+        div(
+          style = "margin-bottom: 20px; display: flex; gap: 10px;",
+          actionButton("annual_vmt_show_chart", "📊 Charts", class = "btn btn-primary", style = "flex: 1; font-weight: 600;"),
+          actionButton("annual_vmt_show_tables", "📋 Tables", class = "btn btn-outline-primary", style = "flex: 1; font-weight: 600;")
         ),
-        DT::dataTableOutput("mileage_table")
-      ),
-      card(
-        card_header(
-          "Mileage by Make & Model",
-          class = "text-center"
+        # Chart section (default visible)
+        div(
+          id = "annual_vmt_chart_section",
+          card(
+            full_screen = TRUE,
+            card_header(
+              "Vehicle Mileage Trends by Age",
+              class = "text-center"
+            ),
+            plotlyOutput("mileage_plot", height = "800px")
+          )
         ),
-        DT::dataTableOutput("mileage_make_model_table")
+        # Tables section (hidden by default)
+        div(
+          id = "annual_vmt_tables_section",
+          style = "display: none;",
+          layout_columns(
+            col_widths = c(6, 6),
+            card(
+              card_header(
+                "Mileage Summary Table (Powertrain-Vehicle Type)",
+                class = "text-center"
+              ),
+              DT::dataTableOutput("mileage_table")
+            ),
+            card(
+              card_header(
+                "Mileage by Make & Model",
+                class = "text-center"
+              ),
+              DT::dataTableOutput("mileage_make_model_table")
+            )
+          )
+        )
       )
     )
   ),
@@ -327,33 +277,91 @@ ui <- page_navbar(
   nav_panel(
     title = "Depreciation",
     value = "Depreciation",
-    icon = icon("chart-line"),
+    icon = icon("arrow-trend-down"),
+    layout_sidebar(
+      sidebar = sidebar(
+        title = "Depreciation Controls",
+        width = 250,
 
-    # Retention Plot
-    card(
-      full_screen = TRUE,
-      card_header(
-        "Vehicle Retention Rates by Age",
-        class = "text-center"
+        checkboxGroupInput("depreciation_fuel_types",
+                          "Powertrain Type:",
+                          choices = list("BEV" = "bev",
+                                       "Conventional" = "cv",
+                                       "Diesel" = "diesel",
+                                       "Flex Fuel" = "flex",
+                                       "Hybrid" = "hev",
+                                       "PHEV" = "phev"),
+                          selected = c("bev", "cv", "hev")),
+
+        checkboxGroupInput("depreciation_vehicle_types",
+                          "Vehicle Types:",
+                          choices = list("Car" = "car",
+                                       "CUV" = "cuv",
+                                       "Minivan" = "minivan",
+                                       "Pickup" = "pickup",
+                                       "SUV" = "suv"),
+                          selected = c("car", "cuv", "minivan", "pickup", "suv")),
+
+        hr(),
+
+        radioButtons("depreciation_category",
+                    "Compare by Category:",
+                    choices = list("Powertrain" = "powertrain",
+                                 "Vehicle Type" = "vehicle_type"),
+                    selected = "powertrain"),
+
+        hr(style = "border-color: #ddd; margin: 10px 0;"),
+
+        sliderInput("depreciation_age_range",
+                   "Age Range for Analysis (Years):",
+                   min = 1, max = 8, value = c(1, 8), step = 0.5),
+
+        checkboxInput("depreciation_show_confidence_bands",
+                      "Show Confidence Regions (25th-75th percentile)",
+                      value = FALSE)
       ),
-      plotlyOutput("retention_plot", height = "850px")
-    ),
-    # Two-column layout for tables
-    layout_columns(
-      col_widths = c(6, 6),
-      card(
-        card_header(
-          "Depreciation Summary Table (Powertrain-Vehicle Type)",
-          class = "text-center"
+      # Main content area with tab switching
+      div(
+        # Toggle buttons
+        div(
+          style = "margin-bottom: 20px; display: flex; gap: 10px;",
+          actionButton("depreciation_show_chart", "📊 Charts", class = "btn btn-primary", style = "flex: 1; font-weight: 600;"),
+          actionButton("depreciation_show_tables", "📋 Tables", class = "btn btn-outline-primary", style = "flex: 1; font-weight: 600;")
         ),
-        DT::dataTableOutput("retention_table")
-      ),
-      card(
-        card_header(
-          "Depreciation by Make & Model",
-          class = "text-center"
+        # Chart section (default visible)
+        div(
+          id = "depreciation_chart_section",
+          card(
+            full_screen = TRUE,
+            card_header(
+              "Vehicle Retention Rates by Age",
+              class = "text-center"
+            ),
+            plotlyOutput("retention_plot", height = "850px")
+          )
         ),
-        DT::dataTableOutput("retention_make_model_table")
+        # Tables section (hidden by default)
+        div(
+          id = "depreciation_tables_section",
+          style = "display: none;",
+          layout_columns(
+            col_widths = c(6, 6),
+            card(
+              card_header(
+                "Depreciation Summary Table (Powertrain-Vehicle Type)",
+                class = "text-center"
+              ),
+              DT::dataTableOutput("retention_table")
+            ),
+            card(
+              card_header(
+                "Depreciation by Make & Model",
+                class = "text-center"
+              ),
+              DT::dataTableOutput("retention_make_model_table")
+            )
+          )
+        )
       )
     )
   ),
@@ -362,47 +370,50 @@ ui <- page_navbar(
   nav_panel(
     title = "Market Conc.",
     value = "Market Conc.",
-    icon = icon("chart-bar"),
+    icon = icon("chart-pie"),
+    layout_sidebar(
+      sidebar = sidebar(
+        title = "Market Concentration Controls",
+        width = 250,
 
-    # HHI Explanation Card
-    card(
-      card_header(
-        "About the Herfindahl-Hirschman Index (HHI)",
-        class = "text-center"
+        radioButtons("hhi_metric",
+                    "HHI Metric:",
+                    choices = list("Brand (Make)" = "make",
+                                 "Vehicle Type" = "type",
+                                 "Price Bin" = "price"),
+                    selected = "make"),
+
+        checkboxGroupInput("market_concentration_hhi_powertrains",
+                          "Show Powertrains:",
+                          choices = list("BEV" = "bev",
+                                       "Conventional" = "cv",
+                                       "Hybrid" = "hev",
+                                       "PHEV" = "phev"),
+                          selected = c("bev", "cv", "hev", "phev"))
       ),
+      # Main content - no card styling
       div(
-        style = "padding: 10px 15px; font-size: 13px; line-height: 1.4;",
+        # HHI Explanation - plain text, no card
         div(
-          style = "margin-bottom: 8px;",
-          strong("What is HHI?"),
-          " The Herfindahl-Hirschman Index (HHI) is a measure of market concentration. It ranges from 0 to 1, where:"
+          style = "padding: 15px 0; text-align: center;",
+          h4("About the Herfindahl-Hirschman Index (HHI)"),
+          p("We use the Herfindahl-Hirschman Index (HHI) as a measure of ",
+            "market concentration. It ranges from 0 to 1. ",
+            tags$a(href = "https://jhelvy.github.io/hhi/",
+                   target = "_blank",
+                   "Click HERE",
+                   style = "color: #3498db; text-decoration: underline;"),
+            " to view an interactive app explaining HHI in more detail.")
         ),
-        tags$ul(
-          style = "margin: 8px 0; padding-left: 25px;",
-          tags$li(
-            strong("0 (or close to 0):"),
-            " Indicates perfect competition with many small players"
-          ),
-          tags$li(
-            strong("Closer to 1:"),
-            " Indicates high concentration, dominated by few players"
-          )
-        ),
+
+        # HHI Visualization - just plot, no card
         div(
-          style = "margin-top: 8px;",
-          "The box plots below show HHI distributions by powertrain type, comparing 2018 vs 2024 data. Use the metric controls in the sidebar to switch between Brand, Vehicle Type, and Price Bin views."
+          style = "padding: 15px 0;",
+          h4(textOutput("hhi_plot_title", inline = TRUE),
+             style = "text-align: center;"),
+          plotlyOutput("hhi_plot", height = "600px")
         )
       )
-    ),
-
-    # HHI Visualization
-    card(
-      full_screen = TRUE,
-      card_header(
-        textOutput("hhi_plot_title", inline = TRUE),
-        class = "text-center"
-      ),
-      plotlyOutput("hhi_plot", height = "600px")
     )
   ),
 
@@ -410,7 +421,7 @@ ui <- page_navbar(
   nav_panel(
     title = "Listings",
     value = "Listings",
-    icon = icon("chart-column"),
+    icon = icon("chart-bar"),
     layout_sidebar(
       sidebar = sidebar(
         title = "Listings Controls",
@@ -497,25 +508,56 @@ ui <- page_navbar(
     title = "Nearest",
     value = "Nearest",
     icon = icon("location-dot"),
-    layout_columns(
-      col_widths = c(6, 6),
-      card(
-        card_header("Vehicle Similarity Analysis"),
-        p(
-          "This analysis shows the nearest vehicle matches based on characteristics like DVMT, fuel type, and vehicle type."
-        ),
-        plotlyOutput("similarity_plot", height = "400px")
+    layout_sidebar(
+      sidebar = sidebar(
+        title = "Nearest Vehicle Controls",
+        width = 250,
+
+        checkboxGroupInput("nearest_fuel_types",
+                          "Powertrain Type:",
+                          choices = list("BEV" = "bev",
+                                       "Conventional" = "cv",
+                                       "Diesel" = "diesel",
+                                       "Flex Fuel" = "flex",
+                                       "Hybrid" = "hev",
+                                       "PHEV" = "phev"),
+                          selected = c("bev", "cv", "hev")),
+
+        checkboxGroupInput("nearest_vehicle_types",
+                          "Vehicle Types:",
+                          choices = list("Car" = "car",
+                                       "CUV" = "cuv",
+                                       "Minivan" = "minivan",
+                                       "Pickup" = "pickup",
+                                       "SUV" = "suv"),
+                          selected = c("car", "cuv", "minivan", "pickup", "suv")),
+
+        checkboxInput("nearest_show_confidence_bands",
+                      "Show Confidence Regions (25th-75th percentile)",
+                      value = FALSE)
       ),
-      card(
-        card_header("Vehicle Clustering"),
-        plotlyOutput("cluster_plot", height = "400px")
-      )
-    ),
-    layout_columns(
-      col_widths = 12,
-      card(
-        card_header("Data Explorer - Find Similar Vehicles"),
-        DT::dataTableOutput("raw_data_table")
+      # Main content
+      div(
+        layout_columns(
+          col_widths = c(6, 6),
+          card(
+            card_header("Vehicle Similarity Analysis"),
+            p("This analysis shows the nearest vehicle matches based on ",
+              "characteristics like DVMT, fuel type, and vehicle type."),
+            plotlyOutput("similarity_plot", height = "400px")
+          ),
+          card(
+            card_header("Vehicle Clustering"),
+            plotlyOutput("cluster_plot", height = "400px")
+          )
+        ),
+        layout_columns(
+          col_widths = 12,
+          card(
+            card_header("Data Explorer - Find Similar Vehicles"),
+            DT::dataTableOutput("raw_data_table")
+          )
+        )
       )
     )
   )
@@ -581,6 +623,28 @@ server <- function(input, output, session) {
     )
   })
 
+  # Annual VMT - Toggle between charts and tables
+  observeEvent(input$annual_vmt_show_chart, {
+    shinyjs::show("annual_vmt_chart_section")
+    shinyjs::hide("annual_vmt_tables_section")
+  })
+
+  observeEvent(input$annual_vmt_show_tables, {
+    shinyjs::hide("annual_vmt_chart_section")
+    shinyjs::show("annual_vmt_tables_section")
+  })
+
+  # Depreciation - Toggle between charts and tables
+  observeEvent(input$depreciation_show_chart, {
+    shinyjs::show("depreciation_chart_section")
+    shinyjs::hide("depreciation_tables_section")
+  })
+
+  observeEvent(input$depreciation_show_tables, {
+    shinyjs::hide("depreciation_chart_section")
+    shinyjs::show("depreciation_tables_section")
+  })
+
   # Load VMT data
   sample_data <- reactive({
     # Try multiple potential data paths
@@ -615,42 +679,45 @@ server <- function(input, output, session) {
     # Get current active tab
     current_tab <- input$tabs
 
-    # Determine which datasets are relevant for the current tab
+    # Determine which datasets are relevant for the current tab and the page-specific filter IDs
     if (current_tab == "Daily VMT") {
       # Daily VMT uses sample_data (DVMT)
-      data_available <- tryCatch(
-        {
-          sample_data()
-        },
-        error = function(e) NULL
-      )
+      data_available <- tryCatch({ sample_data() }, error = function(e) NULL)
+      fuel_types_id <- "daily_vmt_fuel_types"
+      vehicle_types_id <- "daily_vmt_vehicle_types"
     } else if (current_tab == "Annual VMT") {
       # Annual VMT uses mileage_data
-      data_available <- tryCatch(
-        {
-          mileage_data()
-        },
-        error = function(e) NULL
-      )
+      data_available <- tryCatch({ mileage_data() }, error = function(e) NULL)
+      fuel_types_id <- "annual_vmt_fuel_types"
+      vehicle_types_id <- "annual_vmt_vehicle_types"
     } else if (current_tab == "Depreciation") {
       # Depreciation uses retention_data
-      data_available <- tryCatch(
-        {
-          retention_data()
-        },
-        error = function(e) NULL
-      )
+      data_available <- tryCatch({ retention_data() }, error = function(e) NULL)
+      fuel_types_id <- "depreciation_fuel_types"
+      vehicle_types_id <- "depreciation_vehicle_types"
+    } else if (current_tab == "Nearest Vehicle Analysis") {
+      # Nearest uses both mileage and retention data
+      data_available <- tryCatch({ sample_data() }, error = function(e) NULL)
+      fuel_types_id <- "nearest_fuel_types"
+      vehicle_types_id <- "nearest_vehicle_types"
+    } else if (current_tab == "Listings") {
+      # Listings also has filters
+      data_available <- tryCatch({ sample_data() }, error = function(e) NULL)
+      fuel_types_id <- "listings_fuel_types"
+      vehicle_types_id <- "listings_vehicle_types"
+    } else if (current_tab == "Dealerships") {
+      # Dealerships also has filters
+      data_available <- tryCatch({ sample_data() }, error = function(e) NULL)
+      fuel_types_id <- "dealerships_fuel_types"
+      vehicle_types_id <- "dealerships_vehicle_types"
     } else {
       # For other tabs, show all available powertrains from DVMT
-      data_available <- tryCatch(
-        {
-          sample_data()
-        },
-        error = function(e) NULL
-      )
+      data_available <- tryCatch({ sample_data() }, error = function(e) NULL)
+      fuel_types_id <- NULL
+      vehicle_types_id <- NULL
     }
 
-    if (!is.null(data_available)) {
+    if (!is.null(data_available) && !is.null(fuel_types_id) && !is.null(vehicle_types_id)) {
       available_powertrains <- sort(unique(data_available$powertrain))
       available_vehicle_types <- sort(unique(data_available$vehicle_type))
 
@@ -684,8 +751,8 @@ server <- function(input, output, session) {
       )
 
       # Get currently selected values (use isolate to prevent reactive loop)
-      current_fuel_selection <- isolate(input$fuel_types)
-      current_vehicle_selection <- isolate(input$vehicle_types)
+      current_fuel_selection <- isolate(input[[fuel_types_id]])
+      current_vehicle_selection <- isolate(input[[vehicle_types_id]])
 
       # Keep selections that are still valid, or default if none are valid
       new_fuel_selection <- intersect(
@@ -707,19 +774,13 @@ server <- function(input, output, session) {
         new_vehicle_selection <- available_vehicle_types
       }
 
-      updateCheckboxGroupInput(
-        session,
-        "fuel_types",
-        choices = powertrain_choices,
-        selected = new_fuel_selection
-      )
+      updateCheckboxGroupInput(session, fuel_types_id,
+                              choices = powertrain_choices,
+                              selected = new_fuel_selection)
 
-      updateCheckboxGroupInput(
-        session,
-        "vehicle_types",
-        choices = vehicle_type_choices,
-        selected = new_vehicle_selection
-      )
+      updateCheckboxGroupInput(session, vehicle_types_id,
+                              choices = vehicle_type_choices,
+                              selected = new_vehicle_selection)
     }
 
     # Update DVMT range based on actual data (only for Daily VMT tab)
@@ -1042,29 +1103,27 @@ server <- function(input, output, session) {
     read.csv(data_path)
   })
 
-  # Filtered VMT data based on user inputs
+  # Filtered VMT data based on user inputs (Daily VMT page)
   filtered_data <- reactive({
     data <- sample_data()
 
     # Ensure input values exist and are valid
-    fuel_types <- if (
-      is.null(input$fuel_types) || length(input$fuel_types) == 0
-    ) {
+    fuel_types <- if(is.null(input$daily_vmt_fuel_types) ||
+                     length(input$daily_vmt_fuel_types) == 0) {
       unique(data$powertrain)
     } else {
-      input$fuel_types
+      input$daily_vmt_fuel_types
     }
 
     # Note: Daily VMT data has all BEV subtypes, so no mapping needed here
     # Just filter directly with the selected values
     fuel_types <- intersect(fuel_types, unique(data$powertrain))
 
-    vehicle_types <- if (
-      is.null(input$vehicle_types) || length(input$vehicle_types) == 0
-    ) {
+    vehicle_types <- if(is.null(input$daily_vmt_vehicle_types) ||
+                        length(input$daily_vmt_vehicle_types) == 0) {
       unique(data$vehicle_type)
     } else {
-      input$vehicle_types
+      input$daily_vmt_vehicle_types
     }
 
     dvmt_range <- if (is.null(input$dvmt_range)) {
@@ -1083,32 +1142,32 @@ server <- function(input, output, session) {
 
     return(data)
   })
-
-  # Filtered mileage data based on user inputs
+  
+  # Filtered mileage data based on user inputs (Annual VMT page)
   filtered_mileage_data <- reactive({
     data <- mileage_data()
 
     # Ensure input values exist and are valid
-    fuel_types <- if (
-      is.null(input$fuel_types) || length(input$fuel_types) == 0
-    ) {
+    fuel_types <- if(is.null(input$annual_vmt_fuel_types) ||
+                     length(input$annual_vmt_fuel_types) == 0) {
       unique(data$powertrain)
     } else {
-      input$fuel_types
+      input$annual_vmt_fuel_types
     }
 
-    # Map BEV subtypes for mileage data (which only has "bev", not subtypes)
-    if (any(c("bev_tesla", "bev_non_tesla") %in% fuel_types)) {
+    # Map BEV subtypes for mileage data
+    # (which only has "bev", not subtypes)
+    if(any(c("bev_tesla", "bev_non_tesla") %in% fuel_types)) {
       fuel_types <- c(fuel_types, "bev")
     }
-    fuel_types <- intersect(fuel_types, c("bev", "cv", "diesel", "hev", "phev"))
+    fuel_types <- intersect(fuel_types,
+                           c("bev", "cv", "diesel", "hev", "phev"))
 
-    vehicle_types <- if (
-      is.null(input$vehicle_types) || length(input$vehicle_types) == 0
-    ) {
+    vehicle_types <- if(is.null(input$annual_vmt_vehicle_types) ||
+                        length(input$annual_vmt_vehicle_types) == 0) {
       unique(data$vehicle_type)
     } else {
-      input$vehicle_types
+      input$annual_vmt_vehicle_types
     }
 
     data %>%
@@ -1116,30 +1175,30 @@ server <- function(input, output, session) {
   })
 
   # Filtered retention data based on user inputs
+  # (Depreciation page)
   filtered_retention_data <- reactive({
     data <- retention_data()
 
     # Ensure input values exist and are valid
-    fuel_types <- if (
-      is.null(input$fuel_types) || length(input$fuel_types) == 0
-    ) {
+    fuel_types <- if(is.null(input$depreciation_fuel_types) ||
+                     length(input$depreciation_fuel_types) == 0) {
       unique(data$powertrain)
     } else {
-      input$fuel_types
+      input$depreciation_fuel_types
     }
 
-    # Map BEV subtypes for retention data (which only has "bev", not subtypes)
-    if (any(c("bev_tesla", "bev_non_tesla") %in% fuel_types)) {
+    # Map BEV subtypes for retention data
+    # (which only has "bev", not subtypes)
+    if(any(c("bev_tesla", "bev_non_tesla") %in% fuel_types)) {
       fuel_types <- c(fuel_types, "bev")
     }
     fuel_types <- intersect(fuel_types, c("bev", "cv", "hev", "phev"))
 
-    vehicle_types <- if (
-      is.null(input$vehicle_types) || length(input$vehicle_types) == 0
-    ) {
+    vehicle_types <- if(is.null(input$depreciation_vehicle_types) ||
+                        length(input$depreciation_vehicle_types) == 0) {
       unique(data$vehicle_type)
     } else {
-      input$vehicle_types
+      input$depreciation_vehicle_types
     }
 
     data %>%
@@ -1155,12 +1214,10 @@ server <- function(input, output, session) {
     }
 
     # Ensure input values exist and are valid
-    fuel_types <- if (
-      is.null(input$fuel_types) || length(input$fuel_types) == 0
-    ) {
+    fuel_types <- if(is.null(input$nearest_fuel_types) || length(input$nearest_fuel_types) == 0) {
       unique(data$powertrain)
     } else {
-      input$fuel_types
+      input$nearest_fuel_types
     }
 
     # Map BEV subtypes
@@ -1169,12 +1226,10 @@ server <- function(input, output, session) {
     }
     fuel_types <- intersect(fuel_types, unique(data$powertrain))
 
-    vehicle_types <- if (
-      is.null(input$vehicle_types) || length(input$vehicle_types) == 0
-    ) {
+    vehicle_types <- if(is.null(input$nearest_vehicle_types) || length(input$nearest_vehicle_types) == 0) {
       unique(data$vehicle_type)
     } else {
-      input$vehicle_types
+      input$nearest_vehicle_types
     }
 
     data %>%
@@ -1190,12 +1245,10 @@ server <- function(input, output, session) {
     }
 
     # Ensure input values exist and are valid
-    fuel_types <- if (
-      is.null(input$fuel_types) || length(input$fuel_types) == 0
-    ) {
+    fuel_types <- if(is.null(input$nearest_fuel_types) || length(input$nearest_fuel_types) == 0) {
       unique(data$powertrain)
     } else {
-      input$fuel_types
+      input$nearest_fuel_types
     }
 
     # Map BEV subtypes
@@ -1204,12 +1257,10 @@ server <- function(input, output, session) {
     }
     fuel_types <- intersect(fuel_types, unique(data$powertrain))
 
-    vehicle_types <- if (
-      is.null(input$vehicle_types) || length(input$vehicle_types) == 0
-    ) {
+    vehicle_types <- if(is.null(input$nearest_vehicle_types) || length(input$nearest_vehicle_types) == 0) {
       unique(data$vehicle_type)
     } else {
-      input$vehicle_types
+      input$nearest_vehicle_types
     }
 
     # Filter by age range if applicable
@@ -2292,7 +2343,7 @@ server <- function(input, output, session) {
             if (nrow(quant_data) > 0) {
               # Filter quantile data to match current age range
               # Only show confidence bands if checkbox is checked
-              if (input$show_confidence_bands) {
+              if (input$annual_vmt_show_confidence_bands) {
                 quant_data_filtered <- quant_data %>%
                   filter(age_years >= min_age, age_years <= max_age)
 
@@ -2628,7 +2679,7 @@ server <- function(input, output, session) {
 
             if (nrow(quant_data) > 0) {
               # Only show confidence bands if checkbox is checked
-              if (input$show_confidence_bands) {
+              if (input$depreciation_show_confidence_bands) {
                 # Filter quantile data to match current age range
                 quant_data_filtered <- quant_data %>%
                   filter(age_years >= min_age, age_years <= max_age)
@@ -3067,13 +3118,19 @@ server <- function(input, output, session) {
           TRUE ~ toupper(powertrain)
         )
       ) %>%
-      filter(powertrain_lower %in% input$hhi_powertrains)
+      filter(powertrain_lower %in% input$market_concentration_hhi_powertrains)
 
     # Create box plot using quartile statistics - side by side comparison
     fig <- plot_ly()
 
     # Get unique powertrains in order
     powertrains_ordered <- unique(hhi_data$powertrain_label)
+
+    # Define year colors only (2 colors total)
+    year_colors <- list(
+      "2018" = "rgba(200, 200, 200, 0.7)",  # Light gray for 2018
+      "2024" = "rgba(44, 62, 80, 0.8)"      # Dark slate blue for 2024
+    )
 
     for (pt in powertrains_ordered) {
       pt_data <- hhi_data %>% filter(powertrain_label == pt)
@@ -3082,55 +3139,38 @@ server <- function(input, output, session) {
         yr_data <- pt_data %>% filter(year == yr)
 
         if (nrow(yr_data) > 0) {
-          # Color scheme: Coral for 2018, Teal for 2024
-          color <- if (yr == "2018") {
-            "rgba(255, 107, 107, 0.7)"
-          } else {
-            "rgba(78, 205, 196, 0.7)"
-          }
-          line_color <- if (yr == "2018") {
-            "rgb(200, 50, 50)"
-          } else {
-            "rgb(40, 150, 140)"
-          }
+          # Aggregate quartile statistics across all makes for this year/powertrain
+          agg_q1 <- median(yr_data$q25, na.rm = TRUE)
+          agg_median <- median(yr_data$median, na.rm = TRUE)
+          agg_q3 <- median(yr_data$q75, na.rm = TRUE)
+          agg_lower <- max(0, median(yr_data$lower, na.rm = TRUE))
+          agg_upper <- min(1, median(yr_data$upper, na.rm = TRUE))
 
+          # All lines are black, fill color varies only by year
           fig <- fig %>%
             add_trace(
               type = "box",
-              y = rep(pt, nrow(yr_data)),
-              q1 = list(yr_data$q25),
-              median = list(yr_data$median),
-              q3 = list(yr_data$q75),
-              lowerfence = list(pmax(0, yr_data$lower)),
-              upperfence = list(pmin(1, yr_data$upper)),
+              y = pt,
+              q1 = agg_q1,
+              median = agg_median,
+              q3 = agg_q3,
+              lowerfence = agg_lower,
+              upperfence = agg_upper,
               name = yr,
+              fillcolor = year_colors[[yr]],
               marker = list(
-                color = color,
-                line = list(color = line_color, width = 2)
+                line = list(color = "rgb(0, 0, 0)", width = 2)
               ),
-              line = list(color = line_color, width = 2),
+              line = list(color = "rgb(0, 0, 0)", width = 2),
               legendgroup = yr,
               showlegend = (pt == powertrains_ordered[1]),
               boxmean = FALSE,
               orientation = "h",
               hovertemplate = paste0(
-                "<b>",
-                pt,
-                " (",
-                yr,
-                ")</b><br>",
-                "Median HHI: ",
-                round(yr_data$median, 3),
-                "<br>",
-                "Q1: ",
-                round(yr_data$q25, 3),
-                "<br>",
-                "Q3: ",
-                round(yr_data$q75, 3),
-                "<br>",
-                "IQR: ",
-                round(yr_data$IQR, 3),
-                "<br>",
+                "<b>", pt, " (", yr, ")</b><br>",
+                "Median HHI: ", round(agg_median, 3), "<br>",
+                "Q1: ", round(agg_q1, 3), "<br>",
+                "Q3: ", round(agg_q3, 3), "<br>",
                 "<extra></extra>"
               )
             )
@@ -3438,12 +3478,8 @@ server <- function(input, output, session) {
         )
         return(labels[value])
       } else if (var_name == "vehicle_type") {
-        labels <- c(
-          "car" = "Car",
-          "suv" = "SUV",
-          "pickup" = "Pickup",
-          "minivan" = "Minivan"
-        )
+        labels <- c("car" = "Car", "cuv" = "CUV", "suv" = "SUV",
+                   "pickup" = "Pickup", "minivan" = "Minivan")
         return(labels[value])
       } else {
         return(value)
@@ -3456,10 +3492,10 @@ server <- function(input, output, session) {
 
     # Get unique values for each variable with proper ordering
     if (var1 == "powertrain") {
-      var1_order <- c("bev", "cv", "hev", "phev")
+      var1_order <- c("cv", "hev", "phev", "bev")
       var1_values <- intersect(var1_order, unique(data[[var1]]))
     } else if (var1 == "vehicle_type") {
-      var1_order <- c("car", "suv", "pickup", "minivan")
+      var1_order <- c("car", "cuv", "suv", "pickup", "minivan")
       var1_values <- intersect(var1_order, unique(data[[var1]]))
     } else if (var1 == "price_bin") {
       var1_order <- c("$0-$30k", "$30k-$40k", "$40k-$50k", "$50k-$60k", "$60k+")
@@ -3469,10 +3505,10 @@ server <- function(input, output, session) {
     }
 
     if (var2 == "powertrain") {
-      var2_order <- c("bev", "cv", "hev", "phev")
+      var2_order <- c("cv", "hev", "phev", "bev")
       var2_values <- intersect(var2_order, unique(data[[var2]]))
     } else if (var2 == "vehicle_type") {
-      var2_order <- c("car", "suv", "pickup", "minivan")
+      var2_order <- c("car", "cuv", "suv", "pickup", "minivan")
       var2_values <- intersect(var2_order, unique(data[[var2]]))
     } else if (var2 == "price_bin") {
       var2_order <- c("$0-$30k", "$30k-$40k", "$40k-$50k", "$50k-$60k", "$60k+")
