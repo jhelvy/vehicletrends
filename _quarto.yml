@@ -38,13 +38,28 @@ website:
       - text: "Annual VMT"
         icon: clock-fill
         href: annual-vmt.qmd
+      - text: "Depreciation"
+        icon: graph-down
+        href: depreciation.qmd
+      - text: "Market Conc"
+        icon: person-lines-fill
+        href: market-concentration.qmd
+      - text: "Listings"
+        icon: list-ul
+        href: listings.qmd
+      - text: "Dealerships"
+        icon: building
+        href: dealerships.qmd
+      - text: "Nearest"
+        icon: geo-alt-fill
+        href: nearest-vehicles.qmd
   page-footer:
     center:
       - text: "© 2025 John Paul Helveston"
 
 format:
   html:
-    theme: flatly
+    theme: cosmo
     css: styles.css
     anchor-sections: true
     smooth-scroll: true
