@@ -7,8 +7,8 @@ library(bslib)
 library(plotly)
 library(dplyr)
 
-# Load data from GitHub using nanoparquet
-data_url <- "https://github.com/jhelvy/vehicletrends/raw/refs/heads/main/data/quantiles_dvmt.csv"
+# Load data from jsDelivr CDN (CORS-enabled for Shinylive)
+data_url <- "https://cdn.jsdelivr.net/gh/jhelvy/vehicletrends@main/data/quantiles_dvmt.csv"
 quantiles_dvmt <- read.csv(data_url)
 
 # Define UI
