@@ -1,23 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://google.com/index.html</loc>
-    <lastmod>2025-11-21T04:07:15.368Z</lastmod>
+    <loc>https://google.com/nearest-vehicles.html</loc>
+    <lastmod>2025-11-21T04:18:37.504Z</lastmod>
   </url>
   <url>
-    <loc>https://google.com/annual-vmt.html</loc>
-    <lastmod>2025-11-21T04:07:15.346Z</lastmod>
+    <loc>https://google.com/listings.html</loc>
+    <lastmod>2025-11-21T04:18:37.504Z</lastmod>
   </url>
   <url>
-    <loc>https://google.com/LICENSE.html</loc>
-    <lastmod>2025-11-21T04:07:15.346Z</lastmod>
-  </url>
-  <url>
-    <loc>https://google.com/about.html</loc>
-    <lastmod>2025-11-21T04:07:15.346Z</lastmod>
+    <loc>https://google.com/depreciation.html</loc>
+    <lastmod>2025-11-21T04:18:37.502Z</lastmod>
   </url>
   <url>
     <loc>https://google.com/daily-vmt.html</loc>
-    <lastmod>2025-11-21T04:07:15.348Z</lastmod>
+    <lastmod>2025-11-21T04:18:37.484Z</lastmod>
+  </url>
+  <url>
+    <loc>https://google.com/about.html</loc>
+    <lastmod>2025-11-21T04:18:37.481Z</lastmod>
+  </url>
+  <url>
+    <loc>https://google.com/LICENSE.html</loc>
+    <lastmod>2025-11-21T04:18:37.481Z</lastmod>
+  </url>
+  <url>
+    <loc>https://google.com/annual-vmt.html</loc>
+    <lastmod>2025-11-21T04:18:37.481Z</lastmod>
+  </url>
+  <url>
+    <loc>https://google.com/dealerships.html</loc>
+    <lastmod>2025-11-21T04:18:37.501Z</lastmod>
+  </url>
+  <url>
+    <loc>https://google.com/index.html</loc>
+    <lastmod>2025-11-21T04:18:37.504Z</lastmod>
+  </url>
+  <url>
+    <loc>https://google.com/market-concentration.html</loc>
+    <lastmod>2025-11-21T04:18:37.504Z</lastmod>
   </url>
 </urlset>
